@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Bedload Transport Database - Interactive Explorer</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #header h1 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        #stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        #main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        
+        #sidebar {
+            width: 450px;
+            background: white;
+            overflow-y: auto;
+            border-left: 2px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #sidebar.hidden {
+            display: none;
+        }
+        
+        #sidebar-content {
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .close-btn:hover {
+            background: #d32f2f;
+        }
+        
+        .section-title {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .info-item {
+            padding: 5px 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 1em;
+        }
+        
+        .chart-container {
+            margin: 20px 0;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .measurements-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        
+        .measurements-table th,
+        .measurements-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .measurements-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .measurements-table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .method-acoustic {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .method-sampler {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .method-dune {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            z-index: 10000;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        
+        .welcome-message h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            #main-container {
+                flex-direction: column;
+            }
+            
+            #sidebar {
+                width: 100%;
+                height: 50vh;
+            }
+            
+            #map {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Loading database...</p>
+    </div>
+    
+    <div id="header">
+        <h1>🌊 Global Bedload Transport Database</h1>
+        <div id="stats">
+            <div class="stat-item">📊 <span id="total-measurements">0</span> measurements</div>
+            <div class="stat-item">🏞️ <span id="total-rivers">0</span> rivers</div>
+            <div class="stat-item">🌍 <span id="total-countries">0</span> countries</div>
+        </div>
+    </div>
+    
+    <div id="main-container">
+        <div id="map"></div>
+        
+        <div id="sidebar" class="hidden">
+            <button class="close-btn" onclick="closeSidebar()">×</button>
+            <div id="sidebar-content">
+                <div class="welcome-message">
+                    <h2>👈 Select a site on the map</h2>
+                    <p>Click on any marker to view measurements, charts, and download data for that location.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <script>
+        // GitHub raw file URLs
+        const BASE_URL = 'https://raw.githubusercontent.com/geomorphbars/Global_Bedload_Observatory/main/data/';
+        
+        let allData = {
+            rivers: [],
+            sections: [],
+            campaigns: [],
+            measurements: []
+        };
+        
+        let map;
+        let markersCluster;
+        let currentSection = null;
+        
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([45, 6], 5);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            
+            markersCluster = L.markerClusterGroup();
+            map.addLayer(markersCluster);
+        }
+        
+        // Load all data
+        async function loadData() {
+            try {
+                const [rivers, sections, campaigns, measurements] = await Promise.all([
+                    loadCSV('rivers.csv'),
+                    loadCSV('sections.csv'),
+                    loadCSV('campaigns.csv'),
+                    loadCSV('measurements.csv')
+                ]);
+                
+                allData = { rivers, sections, campaigns, measurements };
+                
+                updateStats();
+                addMarkersToMap();
+                
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = '<p style="color: red;">Error loading data. Please check console.</p>';
+            }
+        }
+        
+        function loadCSV(filename) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(BASE_URL + filename, {
+                    download: true,
+                    header: true,
+                    dynamicTyping: true,
+                    complete: (results) => resolve(results.data),
+                    error: (error) => reject(error)
+                });
+            });
+        }
+        
+        function updateStats() {
+            const uniqueRivers = new Set(allData.sections.map(s => s.river_id));
+            const uniqueCountries = new Set(allData.rivers.map(r => r.country));
+            
+            document.getElementById('total-measurements').textContent = allData.measurements.length;
+            document.getElementById('total-rivers').textContent = uniqueRivers.size;
+            document.getElementById('total-countries').textContent = uniqueCountries.size;
+        }
+        
+        function addMarkersToMap() {
+            allData.sections.forEach(section => {
+                if (section.latitude && section.longitude) {
+                    // Get measurements for this section
+                    const sectionMeasurements = getMeasurementsForSection(section.section_id);
+                    
+                    // Get river info
+                    const river = allData.rivers.find(r => r.river_id === section.river_id);
+                    
+                    // Create marker
+                    const marker = L.marker([section.latitude, section.longitude])
+                        .bindPopup(`
+                            <b>${river ? river.river_name : 'Unknown'}</b><br>
+                            ${section.section_name}<br>
+                            <small>${sectionMeasurements.length} measurements</small>
+                        `);
+                    
+                    marker.on('click', () => {
+                        showSectionDetails(section);
+                    });
+                    
+                    markersCluster.addLayer(marker);
+                }
+            });
+        }
+        
+        function getMeasurementsForSection(sectionId) {
+            const campaigns = allData.campaigns.filter(c => c.section_id === sectionId);
+            const campaignIds = campaigns.map(c => c.campaign_id);
+            return allData.measurements.filter(m => campaignIds.includes(m.campaign_id));
+        }
+        
+        function showSectionDetails(section) {
+            currentSection = section;
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('hidden');
+            
+            const river = allData.rivers.find(r => r.river_id === section.river_id);
+            const measurements = getMeasurementsForSection(section.section_id);
+            const campaigns = allData.campaigns.filter(c => c.section_id === section.section_id);
+            
+            // Build HTML
+            let html = `
+                <h2 class="section-title">${river ? river.river_name : 'Unknown River'}</h2>
+                <h3 style="color: #666; margin-bottom: 20px;">${section.section_name}</h3>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Country</div>
+                        <div class="info-value">${river ? river.country : 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Watershed</div>
+                        <div class="info-value">${river && river.watershed_area_km2 ? river.watershed_area_km2 + ' km²' : 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Channel Width</div>
+                        <div class="info-value">${section.section_width_m || 'N/A'} m</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Slope</div>
+                        <div class="info-value">${section.channel_slope || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Campaigns</div>
+                        <div class="info-value">${campaigns.length}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Measurements</div>
+                        <div class="info-value">${measurements.length}</div>
+                    </div>
+                </div>
+                
+                <div class="export-buttons">
+                    <button class="btn btn-success" onclick="exportSectionData('csv')">📥 Download CSV</button>
+                    <button class="btn btn-success" onclick="exportSectionData('json')">📥 Download JSON</button>
+                </div>
+            `;
+            
+            if (measurements.length > 0) {
+                html += `
+                    <h3 class="section-title" style="margin-top: 30px;">📊 Charts</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-flux-discharge"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-temporal"></canvas>
+                    </div>
+                    
+                    <h3 class="section-title" style="margin-top: 30px;">📋 Measurements</h3>
+                `;
+                
+                html += generateMeasurementsTable(measurements, campaigns);
+            } else {
+                html += '<p style="color: #999; text-align: center; margin: 30px 0;">No measurements available</p>';
+            }
+            
+            document.getElementById('sidebar-content').innerHTML = html;
+            
+            // Create charts
+            if (measurements.length > 0) {
+                createFluxDischargeChart(measurements);
+                createTemporalChart(measurements, campaigns);
+            }
+        }
+        
+        function generateMeasurementsTable(measurements, campaigns) {
+            let html = '<table class="measurements-table"><thead><tr>';
+            html += '<th>Date</th><th>Method</th><th>Flux (kg/s)</th><th>Discharge (m³/s)</th><th>d50 (mm)</th>';
+            html += '</tr></thead><tbody>';
+            
+            measurements.forEach(m => {
+                const campaign = campaigns.find(c => c.campaign_id === m.campaign_id);
+                const methodClass = m.measurement_method?.includes('acoustic') ? 'acoustic' : 
+                                   m.measurement_method?.includes('sampler') ? 'sampler' : 'dune';
+                
+                html += '<tr>';
+                html += `<td>${campaign ? campaign.campaign_date : 'N/A'}</td>`;
+                html += `<td><span class="method-badge method-${methodClass}">${m.measurement_method || 'N/A'}</span></td>`;
+                html += `<td>${m.bedload_rate_total_kg_s ? m.bedload_rate_total_kg_s.toFixed(3) : 'N/A'}</td>`;
+                html += `<td>${m.discharge_m3_s ? m.discharge_m3_s.toFixed(2) : 'N/A'}</td>`;
+                html += `<td>${m.d50_mm ? m.d50_mm.toFixed(1) : 'N/A'}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+        
+        function createFluxDischargeChart(measurements) {
+            const ctx = document.getElementById('chart-flux-discharge');
+            if (!ctx) return;
+            
+            const data = measurements
+                .filter(m => m.bedload_rate_total_kg_s && m.discharge_m3_s)
+                .map(m => ({
+                    x: m.discharge_m3_s,
+                    y: m.bedload_rate_total_kg_s,
+                    method: m.measurement_method
+                }));
+            
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Flux vs Discharge',
+                        data: data,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Bedload Flux vs Water Discharge',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const point = context.raw;
+                                    return [
+                                        `Discharge: ${point.x.toFixed(2)} m³/s`,
+                                        `Flux: ${point.y.toFixed(4)} kg/s`,
+                                        `Method: ${point.method}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Water Discharge (m³/s) - log scale'
+                            }
+                        },
+                        y: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Bedload Flux (kg/s) - log scale'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createTemporalChart(measurements, campaigns) {
+            const ctx = document.getElementById('chart-temporal');
+            if (!ctx) return;
+            
+            const data = measurements
+                .filter(m => m.bedload_rate_total_kg_s)
+                .map(m => {
+                    const campaign = campaigns.find(c => c.campaign_id === m.campaign_id);
+                    return {
+                        x: campaign ? campaign.campaign_date : null,
+                        y: m.bedload_rate_total_kg_s
+                    };
+                })
+                .filter(d => d.x)
+                .sort((a, b) => new Date(a.x) - new Date(b.x));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Bedload Flux',
+                        data: data,
+                        borderColor: 'rgba(76, 175, 80, 1)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Temporal Evolution',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Bedload Flux (kg/s)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function exportSectionData(format) {
+            if (!currentSection) return;
+            
+            const measurements = getMeasurementsForSection(currentSection.section_id);
+            const campaigns = allData.campaigns.filter(c => c.section_id === currentSection.section_id);
+            const river = allData.rivers.find(r => r.river_id === currentSection.river_id);
+            
+            // Combine data
+            const exportData = measurements.map(m => {
+                const campaign = campaigns.find(c => c.campaign_id === m.campaign_id);
+                return {
+                    river_name: river?.river_name || 'N/A',
+                    section_name: currentSection.section_name,
+                    country: river?.country || 'N/A',
+                    date: campaign?.campaign_date || 'N/A',
+                    measurement_method: m.measurement_method || 'N/A',
+                    bedload_rate_kg_s: m.bedload_rate_total_kg_s,
+                    discharge_m3_s: m.discharge_m3_s,
+                    d50_mm: m.d50_mm,
+                    d84_mm: m.d84_mm,
+                    water_depth_m: m.water_depth_mean_m,
+                    flow_velocity_m_s: m.flow_velocity_mean_m_s
+                };
+            });
+            
+            if (format === 'csv') {
+                const csv = Papa.unparse(exportData);
+                downloadFile(csv, `${currentSection.section_id}_data.csv`, 'text/csv');
+            } else if (format === 'json') {
+                const json = JSON.stringify(exportData, null, 2);
+                downloadFile(json, `${currentSection.section_id}_data.json`, 'application/json');
+            }
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.add('hidden');
+            currentSection = null;
+        }
+        
+        // Initialize
+        initMap();
+        loadData();
+    </script>
+</body>
+</html>
