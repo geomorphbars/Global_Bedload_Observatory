@@ -1,0 +1,7 @@
+section_id,river_id,section_name,latitude,longitude,elevation_m,section_width_m,section_length_m,channel_slope,confinement,morphology_type,upstream_distance_km,section_photo_url
+FRA_ARC_S01,FRA_ARC,Pont de Bourg-Saint-Maurice,45.6234,6.7654,810,15,100,0.012,partly_confined,pool-riffle,85,
+FRA_ARC_S02,FRA_ARC,Aval barrage Aime,45.5523,6.6234,650,22,150,0.008,unconfined,plane-bed,105,
+CHE_VENOGE_S01,CHE_VENOGE,Eclépens,46.6345,6.5234,450,8,80,0.015,partly_confined,pool-riffle,15,
+CHE_VENOGE_S02,CHE_VENOGE,L'Isle,46.6123,6.5890,420,10,60,0.018,unconfined,plane-bed,22,
+USA_SNAKE_S01,USA_SNAKE,Near Jackson,43.4799,-110.7624,1950,45,200,0.005,confined,pool-riffle,850,
+ITA_ADIGE_S01,ITA_ADIGE,Trento,46.0664,11.1257,195,85,250,0.003,partly_confined,braided,220,

@@ -1,0 +1,190 @@
+{
+  "title": "Global Bedload Transport Database",
+  "description": "A comprehensive, community-driven database of bedload transport measurements in rivers worldwide. Includes data from physical samplers, passive acoustic monitoring, dune tracking, and other methods.",
+  "description_html": "<p>A comprehensive database of bedload transport measurements in rivers worldwide.</p><p>Methods include: physical samplers, passive acoustic monitoring, dune tracking, tracers, and morphological budgets.</p>",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "Community contributions and published literature",
+  "source_url": "https://github.com/YOUR-USERNAME/bedload-global-database",
+  "about": "About this database",
+  "about_url": "https://github.com/YOUR-USERNAME/bedload-global-database#readme",
+  
+  "databases": {
+    "bedload": {
+      "title": "Global Bedload Database",
+      "description": "Main database containing rivers, sections, campaigns, and measurements",
+      
+      "tables": {
+        "rivers": {
+          "title": "Rivers",
+          "description": "Rivers with bedload transport measurements",
+          "sort_desc": "watershed_area_km2",
+          "columns": {
+            "river_id": "Unique river identifier (e.g., FRA_ARC)",
+            "river_name": "Name of the river",
+            "country": "Country code (ISO 3166-1 alpha-3)",
+            "watershed_area_km2": "Watershed area upstream of measurement(s) in km²"
+          }
+        },
+        
+        "sections": {
+          "title": "Measurement Sections",
+          "description": "Specific reaches where measurements were conducted",
+          "sort_desc": "section_width_m",
+          "columns": {
+            "section_id": "Unique section identifier",
+            "river_id": "Link to parent river",
+            "section_name": "Descriptive name of the section",
+            "latitude": "Latitude in decimal degrees (WGS84)",
+            "longitude": "Longitude in decimal degrees (WGS84)",
+            "elevation_m": "Elevation in meters above sea level",
+            "section_width_m": "Average active channel width in meters",
+            "channel_slope": "Channel slope (m/m)",
+            "morphology_type": "Channel morphology type"
+          }
+        },
+        
+        "campaigns": {
+          "title": "Measurement Campaigns",
+          "description": "Individual field campaigns (date + conditions)",
+          "sort_desc": "campaign_date",
+          "columns": {
+            "campaign_id": "Unique campaign identifier",
+            "section_id": "Link to measurement section",
+            "campaign_date": "Date of measurement (YYYY-MM-DD)",
+            "hydrological_context": "Flow context (flood/baseflow/snowmelt/etc.)",
+            "data_provider": "Person or institution who provided the data",
+            "quality_flag": "Data quality: A (excellent), B (good), C (acceptable), D (poor)"
+          }
+        },
+        
+        "measurements": {
+          "title": "Bedload Measurements",
+          "description": "Individual bedload transport measurements",
+          "sort_desc": "bedload_rate_total_kg_s",
+          "columns": {
+            "measurement_id": "Unique measurement identifier",
+            "campaign_id": "Link to parent campaign",
+            "measurement_method": "Measurement method used",
+            "bedload_rate_total_kg_s": "Total bedload transport rate integrated across section (kg/s)",
+            "bedload_rate_unit_mean_kg_s_m": "Mean unit bedload rate (kg/s/m of width)",
+            "number_of_measurement_points": "Number of measurement points across section",
+            "discharge_m3_s": "Water discharge (m³/s)",
+            "d50_mm": "Median grain size (mm)",
+            "d84_mm": "84th percentile grain size (mm)",
+            "water_depth_mean_m": "Mean flow depth (m)",
+            "flow_velocity_mean_m_s": "Mean flow velocity (m/s)",
+            "shear_stress_mean_Pa": "Mean bed shear stress (Pa)",
+            "calibration_equation": "For acoustic: calibration equation used",
+            "data_version": "Data version (v1.0, v2.0, etc.)"
+          }
+        },
+        
+        "measurements_full": {
+          "title": "Complete Measurements (All Info)",
+          "description": "Complete view with all information joined from rivers, sections, campaigns, and measurements",
+          "sort_desc": "campaign_date",
+          "hidden": false,
+          "columns": {
+            "bedload_rate_total_kg_s": "Total bedload flux (kg/s)",
+            "discharge_m3_s": "Water discharge (m³/s)",
+            "d50_mm": "Median grain size (mm)",
+            "river_name": "River name",
+            "country": "Country",
+            "section_name": "Measurement section",
+            "campaign_date": "Date",
+            "measurement_method": "Method",
+            "latitude": "Latitude",
+            "longitude": "Longitude"
+          }
+        },
+        
+        "summary_by_river": {
+          "title": "Summary by River",
+          "description": "Aggregated statistics for each river",
+          "sort_desc": "n_measurements",
+          "columns": {
+            "river_name": "River name",
+            "country": "Country",
+            "n_sections": "Number of measurement sections",
+            "n_campaigns": "Number of campaigns",
+            "n_measurements": "Total number of measurements",
+            "first_measurement": "Date of first measurement",
+            "last_measurement": "Date of most recent measurement",
+            "avg_bedload_rate_kg_s": "Average bedload rate (kg/s)",
+            "avg_discharge_m3_s": "Average discharge (m³/s)"
+          }
+        },
+        
+        "summary_by_method": {
+          "title": "Summary by Method",
+          "description": "Statistics grouped by measurement method",
+          "sort_desc": "n_measurements",
+          "columns": {
+            "measurement_method": "Measurement method",
+            "n_measurements": "Number of measurements",
+            "avg_bedload_rate_kg_s": "Average bedload rate (kg/s)",
+            "avg_discharge_m3_s": "Average discharge (m³/s)",
+            "avg_d50_mm": "Average grain size (mm)",
+            "avg_n_points": "Average number of measurement points"
+          }
+        },
+        
+        "summary_by_country": {
+          "title": "Summary by Country",
+          "description": "Statistics grouped by country",
+          "sort_desc": "n_measurements",
+          "columns": {
+            "country": "Country code (ISO 3166-1 alpha-3)",
+            "n_rivers": "Number of rivers",
+            "n_sections": "Number of sections",
+            "n_measurements": "Number of measurements"
+          }
+        },
+        
+        "acoustic_calibrations": {
+          "title": "Acoustic Calibrations",
+          "description": "Summary of passive acoustic measurements by calibration equation",
+          "sort_desc": "n_measurements",
+          "columns": {
+            "calibration_equation": "Calibration equation used",
+            "n_measurements": "Number of measurements",
+            "avg_bedload_rate": "Average bedload rate (kg/s)",
+            "hydrophone_types": "Hydrophone types used",
+            "software_versions": "Processing software versions"
+          }
+        }
+      },
+      
+      "queries": {
+        "measurements_by_country": {
+          "title": "Measurements by Country",
+          "sql": "SELECT country, COUNT(*) as n_measurements FROM measurements_full GROUP BY country ORDER BY n_measurements DESC"
+        },
+        "high_transport_events": {
+          "title": "High Transport Events (>1 kg/s)",
+          "sql": "SELECT river_name, section_name, campaign_date, bedload_rate_total_kg_s, discharge_m3_s FROM measurements_full WHERE bedload_rate_total_kg_s > 1 ORDER BY bedload_rate_total_kg_s DESC"
+        },
+        "recent_measurements": {
+          "title": "Recent Measurements (Last Year)",
+          "sql": "SELECT river_name, country, campaign_date, bedload_rate_total_kg_s, measurement_method FROM measurements_full WHERE campaign_date > date('now', '-1 year') ORDER BY campaign_date DESC"
+        },
+        "acoustic_vs_sampler": {
+          "title": "Acoustic vs Physical Sampler Comparison",
+          "sql": "SELECT measurement_method, COUNT(*) as n, AVG(bedload_rate_total_kg_s) as avg_flux, AVG(discharge_m3_s) as avg_Q FROM measurements_full WHERE measurement_method IN ('passive_acoustic', 'physical_sampler') GROUP BY measurement_method"
+        }
+      }
+    }
+  },
+  
+  "plugins": {
+    "datasette-cluster-map": {
+      "latitude_column": "latitude",
+      "longitude_column": "longitude"
+    }
+  },
+  
+  "extra_css_urls": [
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+  ]
+}
