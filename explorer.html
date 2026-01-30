@@ -336,7 +336,101 @@
     <!-- Tab: Map (vue actuelle) -->
 	<div id="tab-map" class="active">
 		<div id="map" style="flex: 1;"></div>
-		<div id="sidebar">...</div>
+		<div id="sidebar">
+			<div id="close-btn" onclick="closeSidebar()">×</div>
+			<div id="sidebar-content">
+				<h2 id="site-title">Site Information</h2>
+				
+				<!-- Site Info -->
+				<div class="info-section">
+					<div class="info-item">
+						<strong>River:</strong> <span id="river-name">-</span>
+					</div>
+					<div class="info-item">
+						<strong>Section:</strong> <span id="section-name">-</span>
+					</div>
+					<div class="info-item">
+						<strong>Country:</strong> <span id="country">-</span>
+					</div>
+					<div class="info-item">
+						<strong>Location:</strong> <span id="coordinates">-</span>
+					</div>
+					<div class="info-item">
+						<strong>Measurements:</strong> <span id="measurement-count">0</span>
+					</div>
+				</div>
+				
+				<!-- Filtres -->
+				<div class="filters-section" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+					<h3 style="margin-top: 0; font-size: 1.1em; margin-bottom: 15px;">🔍 Filter Measurements</h3>
+					
+					<label style="display: block; margin-top: 10px; font-weight: 600; font-size: 0.9em;">River:</label>
+					<select id="filter-river" onchange="applyFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Rivers</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Section:</label>
+					<select id="filter-section" onchange="applyFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Sections</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Method:</label>
+					<select id="filter-method" onchange="applyFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Methods</option>
+						<option value="passive_acoustic">Passive Acoustic</option>
+						<option value="active_acoustic">Active Acoustic</option>
+						<option value="physical_sampler">Physical Sampler</option>
+						<option value="dune_tracking">Dune Tracking</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Country:</label>
+					<select id="filter-country" onchange="applyFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Countries</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Date Range:</label>
+					<div style="display: flex; gap: 5px; margin-top: 5px;">
+						<input type="date" id="filter-date-start" onchange="applyFilters()" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+						<input type="date" id="filter-date-end" onchange="applyFilters()" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+					</div>
+					
+					<button onclick="resetFilters()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+						🔄 Reset Filters
+					</button>
+					
+					<div style="margin-top: 10px; text-align: center; color: #666;">
+						<small id="filter-count">Showing all measurements</small>
+					</div>
+				</div>
+				
+				<!-- Charts -->
+				<div class="chart-container" style="margin-top: 20px;">
+					<h3>Flux vs Discharge</h3>
+					<canvas id="chart-flux"></canvas>
+				</div>
+				
+				<div class="chart-container" style="margin-top: 20px;">
+					<h3>Temporal Evolution</h3>
+					<canvas id="chart-temporal"></canvas>
+				</div>
+				
+				<!-- Measurements Table -->
+				<div class="table-container" style="margin-top: 20px;">
+					<h3>Measurements</h3>
+					<div id="measurements-table"></div>
+				</div>
+				
+				<!-- Export Buttons -->
+				<div class="export-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+					<button onclick="exportData('csv')" class="btn btn-success" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+						📥 Export CSV
+					</button>
+					<button onclick="exportData('json')" class="btn btn-success" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+						📥 Export JSON
+					</button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<!-- Tab: Browse All Data (NOUVEAU) -->
@@ -427,6 +521,40 @@
             markersCluster = L.markerClusterGroup();
             map.addLayer(markersCluster);
         }
+		
+		// Format discharge source
+		function formatDischargeSource(source) {
+			if (!source) return '-';
+			const sources = {
+				'hydrometric_station': 'Station',
+				'adcp_measurement': 'ADCP',
+				'rating_curve': 'Rating curve',
+				'current_meter': 'Current meter',
+				'model': 'Model',
+				'estimated': 'Estimated',
+				'other': 'Other'
+			};
+			return sources[source] || source;
+		}
+
+		// Format grain size range
+		function formatGrainRange(d10, d84) {
+			if (d10 && d84) {
+				return `${d10.toFixed(1)}-${d84.toFixed(1)}`;
+			}
+			return '-';
+		}
+
+		// Format method name for display
+		function formatMethod(method) {
+			const methods = {
+				'passive_acoustic': 'Passive Acoustic',
+				'active_acoustic': 'Active Acoustic',
+				'physical_sampler': 'Physical Sampler',
+				'dune_tracking': 'Dune Tracking'
+			};
+			return methods[method] || method;
+		}
         
         // Load all data
         async function loadData() {
@@ -819,13 +947,44 @@
 				return {
 					...m,
 					campaign_date: campaign?.campaign_date,
+					river_id: river?.river_id,
 					river_name: river?.river_name,
 					country: river?.country,
+					section_id: section?.section_id,
 					section_name: section?.section_name
 				};
 			});
 			
 			// Populate filters
+			// Populate river dropdown
+			const rivers = [...new Set(allMeasurementsData.map(d => d.river_id))].filter(r => r).sort();
+			const riverSelect = document.getElementById('filter-river');
+			riverSelect.innerHTML = '<option value="">All Rivers</option>';
+			rivers.forEach(riverId => {
+				const riverData = allData.rivers.find(r => r.river_id === riverId);
+				if (riverData) {
+					const option = document.createElement('option');
+					option.value = riverId;
+					option.textContent = riverData.river_name;
+					riverSelect.appendChild(option);
+				}
+			});
+			
+			// Populate section dropdown
+			const sections = [...new Set(allMeasurementsData.map(d => d.section_id))].filter(s => s).sort();
+			const sectionSelect = document.getElementById('filter-section');
+			sectionSelect.innerHTML = '<option value="">All Sections</option>';
+			sections.forEach(sectionId => {
+				const sectionData = allData.sections.find(s => s.section_id === sectionId);
+				if (sectionData) {
+					const option = document.createElement('option');
+					option.value = sectionId;
+					option.textContent = sectionData.section_name;
+					sectionSelect.appendChild(option);
+				}
+			});
+			
+			// Populate country and method dropdowns
 			const countries = [...new Set(allMeasurementsData.map(d => d.country))].filter(c => c).sort();
 			const methods = [...new Set(allMeasurementsData.map(d => d.measurement_method))].filter(m => m).sort();
 			
@@ -850,12 +1009,16 @@
 		}
 
 		function applyFilters() {
+			const river = document.getElementById('filter-river').value;
+			const section = document.getElementById('filter-section').value;
 			const country = document.getElementById('filter-country').value;
 			const method = document.getElementById('filter-method').value;
 			const dateStart = document.getElementById('filter-date-start').value;
 			const dateEnd = document.getElementById('filter-date-end').value;
 			
 			filteredData = allMeasurementsData.filter(d => {
+				if (river && d.river_id !== river) return false;
+				if (section && d.section_id !== section) return false;
 				if (country && d.country !== country) return false;
 				if (method && d.measurement_method !== method) return false;
 				if (dateStart && d.campaign_date < dateStart) return false;
@@ -867,6 +1030,8 @@
 		}
 
 		function resetFilters() {
+			document.getElementById('filter-river').value = '';
+			document.getElementById('filter-section').value = '';
 			document.getElementById('filter-country').value = '';
 			document.getElementById('filter-method').value = '';
 			document.getElementById('filter-date-start').value = '';
@@ -881,7 +1046,8 @@
 			
 			let html = '<table class="measurements-table"><thead><tr>';
 			html += '<th>River</th><th>Section</th><th>Country</th><th>Date</th>';
-			html += '<th>Method</th><th>Flux (kg/s)</th><th>Discharge (m³/s)</th><th>d50 (mm)</th>';
+			html += '<th>Method</th><th>Flux (kg/s)</th><th>Discharge (m³/s)</th>';
+			html += '<th>Source</th><th>d50 (mm)</th><th>d10-d84 (mm)</th>';
 			html += '</tr></thead><tbody>';
 			
 			filteredData.forEach(d => {
@@ -893,7 +1059,9 @@
 				html += `<td>${d.measurement_method || 'N/A'}</td>`;
 				html += `<td>${d.bedload_rate_total_kg_s ? d.bedload_rate_total_kg_s.toFixed(3) : 'N/A'}</td>`;
 				html += `<td>${d.discharge_m3_s ? d.discharge_m3_s.toFixed(2) : 'N/A'}</td>`;
+				html += `<td><small>${formatDischargeSource(d.discharge_source)}</small></td>`;
 				html += `<td>${d.d50_mm ? d.d50_mm.toFixed(1) : 'N/A'}</td>`;
+				html += `<td><small>${formatGrainRange(d.d10_mm, d.d84_mm)}</small></td>`;
 				html += '</tr>';
 			});
 			
