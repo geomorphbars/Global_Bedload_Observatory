@@ -1,0 +1,50 @@
+[
+  {
+    "river_id": "CHE_VENOGE",
+    "river_name": "Venoge",
+    "country": "CHE",
+    "n_measurements": 4,
+    "n_sections": 2,
+    "avg_flux": 0.08,
+    "min_flux": 0.035,
+    "max_flux": 0.128,
+    "first_date": "2021-08-12",
+    "last_date": "2023-10-15"
+  },
+  {
+    "river_id": "FRA_ARC",
+    "river_name": "Arc",
+    "country": "FRA",
+    "n_measurements": 7,
+    "n_sections": 2,
+    "avg_flux": 0.1734,
+    "min_flux": 0.088,
+    "max_flux": 0.265,
+    "first_date": "2022-05-10",
+    "last_date": "2024-05-22"
+  },
+  {
+    "river_id": "ITA_ADIGE",
+    "river_name": "Adige",
+    "country": "ITA",
+    "n_measurements": 1,
+    "n_sections": 1,
+    "avg_flux": 1.852,
+    "min_flux": 1.852,
+    "max_flux": 1.852,
+    "first_date": "2019-11-08",
+    "last_date": "2019-11-08"
+  },
+  {
+    "river_id": "USA_SNAKE",
+    "river_name": "Snake River",
+    "country": "USA",
+    "n_measurements": 3,
+    "n_sections": 1,
+    "avg_flux": 1.6327,
+    "min_flux": 0.186,
+    "max_flux": 2.567,
+    "first_date": "2020-06-05",
+    "last_date": "2020-09-18"
+  }
+]

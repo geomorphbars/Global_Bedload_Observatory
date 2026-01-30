@@ -1,0 +1,29 @@
+[
+  {
+    "method": "dune_tracking",
+    "n_measurements": 3,
+    "avg_flux": 1.551,
+    "min_flux": 0.234,
+    "max_flux": 2.567,
+    "avg_discharge": 76.5,
+    "avg_d50": 48.3333
+  },
+  {
+    "method": "passive_acoustic",
+    "n_measurements": 7,
+    "avg_flux": 0.397,
+    "min_flux": 0.035,
+    "max_flux": 2.145,
+    "avg_discharge": 19.3143,
+    "avg_d50": 34.0
+  },
+  {
+    "method": "physical_sampler",
+    "n_measurements": 5,
+    "avg_flux": 0.1704,
+    "min_flux": 0.095,
+    "max_flux": 0.265,
+    "avg_discharge": 15.72,
+    "avg_d50": 37.8
+  }
+]

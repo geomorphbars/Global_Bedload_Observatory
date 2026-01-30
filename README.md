@@ -1,293 +1,461 @@
-# Global Bedload Transport Database 🌊
+# 🌊 Global Bedload Transport Database
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXX)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Data](https://img.shields.io/badge/data-CSV-blue.svg)](data/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/geomorphbars/Global_Bedload_Observatory)
 
-A comprehensive, community-driven database of **bedload transport measurements** in rivers worldwide.
-
-🔗 **[Explore the database interactively](https://bedload-database.datasette.cloud)** (Datasette interface)
+A comprehensive, community-driven database of bedload transport measurements in rivers worldwide.
 
 ---
 
-## 📊 Database Statistics
+## 🚀 Quick Access
 
-- 🌍 **Countries**: 15
-- 🏞️ **Rivers**: 45
-- 📍 **Measurement sections**: 78
-- 📅 **Campaigns**: 152
-- 📈 **Total measurements**: 387
-- 📅 **Time span**: 1985–2024
-- 🔬 **Methods**: Physical samplers, Passive acoustic, Dune tracking, Tracers
+**🌐 Interactive Explorer:** [https://geomorphbars.github.io/Global_Bedload_Observatory/](https://geomorphbars.github.io/Global_Bedload_Observatory/)
 
-*Last updated: 2025-01-29*
+Explore measurement sites on an interactive map, view detailed data, charts, and download datasets.
 
 ---
 
-## 🎯 Purpose
+## 📊 Database Overview
 
-This database aims to:
-- Centralize scattered bedload transport data from worldwide sources
-- Improve bedload transport formulas through large-scale analysis
-- Enable global comparisons across rivers and methods
-- Support numerical modeling validation
-- Facilitate meta-analyses and synthesis studies
-- Democratize access to bedload data
+*Statistics are automatically calculated from the latest data. Visit the [homepage](https://geomorphbars.github.io/Global_Bedload_Observatory/) for current numbers.*
+
+**Content:**
+- Bedload transport measurements from rivers worldwide
+- Multiple measurement methods (physical samplers, passive acoustic, dune tracking, tracers)
+- Data from published literature and field campaigns
+- Temporal coverage: 1980s to present
+- Hierarchical structure: Rivers → Sections → Campaigns → Measurements
+
+**Geographic coverage:**
+- Europe, North America, Asia, South America, Oceania
+- Focus on mountainous and gravel-bed rivers
+- Expanding to lowland and sandy rivers
 
 ---
 
-## 💾 Access the Data
+## ✨ Features
 
-### 🌐 Online Interface (Recommended)
+### 🗺️ Interactive Map Explorer
+- **Worldwide coverage**: Visualize all measurement sites on an interactive map
+- **Click to explore**: Select any site to view detailed measurements
+- **Automatic charts**: Flux vs discharge, temporal evolution, and more
+- **Site-specific export**: Download data for individual sites (CSV/JSON)
 
-**Datasette Web App:** [bedload-database.datasette.cloud](https://bedload-database.datasette.cloud)
+### 📊 Browse & Filter
+- **Global view**: Access all measurements in a searchable table
+- **Advanced filters**: Filter by country, method, date range
+- **Batch export**: Download filtered or complete datasets
+- **Multiple formats**: CSV and JSON available
 
-Features:
-- 🗺️ Interactive map of measurement sites
-- 🔍 Filter and search measurements
-- 📊 Pre-made summary views
-- 📥 Export to CSV/JSON
-- 💻 SQL query interface
-- 📡 JSON API
+### 📈 Visualizations
+- Flux-discharge relationships (log-log plots)
+- Temporal evolution of bedload transport
+- Statistics by method and country
+- Grain size distributions
 
-### 📥 Direct Download (CSV)
+### 💾 Data Access Methods
 
-Raw CSV files in the [`data/`](data/) directory:
-- [`rivers.csv`](data/rivers.csv) - River characteristics
-- [`sections.csv`](data/sections.csv) - Measurement sections
-- [`campaigns.csv`](data/campaigns.csv) - Field campaigns
-- [`measurements.csv`](data/measurements.csv) - Bedload measurements
+**1. Web Interface (easiest)**
+```
+https://geomorphbars.github.io/Global_Bedload_Observatory/explorer.html
+```
 
-### 🔌 API Access
+**2. Direct CSV Download**
+- [Rivers](https://github.com/geomorphbars/Global_Bedload_Observatory/blob/main/data/rivers.csv)
+- [Sections](https://github.com/geomorphbars/Global_Bedload_Observatory/blob/main/data/sections.csv)
+- [Campaigns](https://github.com/geomorphbars/Global_Bedload_Observatory/blob/main/data/campaigns.csv)
+- [Measurements](https://github.com/geomorphbars/Global_Bedload_Observatory/blob/main/data/measurements.csv)
 
-JSON API endpoint:
+**3. Static JSON API**
+```
+https://geomorphbars.github.io/Global_Bedload_Observatory/api/all.json
+https://geomorphbars.github.io/Global_Bedload_Observatory/api/stats.json
+https://geomorphbars.github.io/Global_Bedload_Observatory/api/summary_by_country.json
+https://geomorphbars.github.io/Global_Bedload_Observatory/api/summary_by_method.json
+```
+
+**4. Git Clone (for developers)**
 ```bash
-# Get all measurements
-curl https://bedload-database.datasette.cloud/bedload/measurements.json
-
-# Filter by country
-curl https://bedload-database.datasette.cloud/bedload/measurements.json?country=FRA
-
-# Get summary by river
-curl https://bedload-database.datasette.cloud/bedload/summary_by_river.json
-```
-
-### 🐍 Python Access
-
-```python
-import pandas as pd
-
-# Load directly from GitHub
-url = "https://raw.githubusercontent.com/USERNAME/bedload-global-database/main/data/measurements.csv"
-df = pd.read_csv(url)
-
-# Or from Datasette API
-url = "https://bedload-database.datasette.cloud/bedload/measurements_full.json?_shape=array"
-df = pd.read_json(url)
-```
-
-### 📦 Clone Entire Repository
-
-```bash
-git clone https://github.com/USERNAME/bedload-global-database.git
+git clone https://github.com/geomorphbars/Global_Bedload_Observatory.git
 ```
 
 ---
 
-## 📖 Documentation
+## 🤝 How to Contribute
 
-- **[Database Structure](docs/database_structure.md)** - Table schemas and relationships
-- **[Field Definitions](docs/field_definitions.md)** - Detailed column descriptions
-- **[Data Standards](docs/data_standards.md)** - Units, formats, quality control
-- **[Contributing Guide](CONTRIBUTING.md)** - How to add your data
-- **[Changelog](CHANGELOG.md)** - Version history
+**This is a community database!** We welcome contributions of bedload transport data from researchers worldwide.
+
+### What Data Can I Contribute?
+
+We accept bedload measurements obtained through:
+- ✅ **Physical samplers** (Helley-Smith, Toutle River, etc.)
+- ✅ **Passive acoustic monitoring** (hydrophones)
+- ✅ **Active acoustic methods** (ADCP, aDcp)
+- ✅ **Dune tracking** (bathymetric surveys, photogrammetry, repeat surveys)
+- ✅ **Tracers** (RFID, painted clasts, magnetic tracers)
+- ✅ **Morphological budgets** (repeat topography)
+
+**Requirements:**
+- Minimum information: location (lat/lon), date, bedload flux, water discharge, grain size
+- Published data (peer-reviewed) OR unpublished field data with documentation
+- Proper metadata (method, equipment, calibration for acoustic)
+
+### Three Ways to Contribute
+
+#### Option 1: Email Submission (Easiest)
+
+**For small datasets (<20 measurements) or non-GitHub users:**
+
+1. **Download the template:**
+   - [Measurement template (CSV)](https://github.com/geomorphbars/Global_Bedload_Observatory/blob/main/templates/measurement_template.csv)
+   - Or fill directly in Excel using our structure
+
+2. **Provide this information:**
+   - **River**: Name, country, watershed area
+   - **Section**: Location (lat/lon), width, slope, morphology
+   - **Campaign**: Date, flow conditions, your contact
+   - **Measurements**: Method, flux, discharge, grain size, uncertainty
+
+3. **Email to:** [your-email@institution.edu]
+   - Subject: "Bedload database contribution - [River name]"
+   - Attach completed CSV or Excel file
+   - Include any relevant publications (DOI)
+
+4. **We will:**
+   - Validate and integrate your data
+   - Credit you as data provider
+   - Notify you when published
+   - Invite you as co-author if >50 measurements
+
+**Timeline:** Usually integrated within 2 weeks
 
 ---
 
-## 🤝 Contributing
+#### Option 2: GitHub Pull Request (Recommended for developers)
 
-**We welcome contributions!** 
+**For larger datasets or if you're comfortable with Git:**
 
-This is a community-driven database. If you have bedload transport data to share:
+1. **Fork this repository**
+   ```bash
+   # On GitHub: Click "Fork" button
+   ```
 
-1. 📧 **Email submission** (easiest): [contact@email.com](mailto:contact@email.com)
-2. 🔀 **GitHub Pull Request** (for developers): See [CONTRIBUTING.md](CONTRIBUTING.md)
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/Global_Bedload_Observatory.git
+   cd Global_Bedload_Observatory
+   ```
 
-**What we accept:**
-- Physical sampler data (Helley-Smith, etc.)
-- Passive/active acoustic measurements
-- Dune tracking results
-- Tracer studies
-- Morphological budget estimates
+3. **Add your data to CSV files**
+   - Edit `data/rivers.csv` (add river if new)
+   - Edit `data/sections.csv` (add section if new)
+   - Edit `data/campaigns.csv` (add campaign info)
+   - Edit `data/measurements.csv` (add measurements)
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions.
+4. **Validate your data**
+   ```bash
+   python scripts/validate.py
+   ```
+   Fix any errors reported
+
+5. **Commit and push**
+   ```bash
+   git add data/*.csv
+   git commit -m "Add measurements from [River Name] - [Your Institution]"
+   git push origin main
+   ```
+
+6. **Create Pull Request**
+   - On GitHub: Click "Pull Request"
+   - Describe your contribution
+   - We'll review and merge (usually within 1 week)
 
 ---
 
-## 📝 Citation
+#### Option 3: Collaborative Integration (For large datasets)
 
-If you use this database in your research, please cite:
+**For major contributions (>100 measurements) or complex datasets:**
+
+Contact us first at [your-email@institution.edu] to discuss:
+- Data format and structure
+- Integration strategy
+- Co-authorship on data paper
+- Long-term collaboration
+
+We can help with:
+- Data formatting and validation
+- Quality control
+- Metadata completion
+- Integration into the database
+
+---
+
+### Data Standards
+
+**Please ensure:**
+- ✅ **Units standardized:**
+  - Bedload flux: kg/s (total) or kg/s/m (unit rate)
+  - Discharge: m³/s
+  - Grain size: mm
+  - Distances: m
+  - Slopes: m/m
+
+- ✅ **Coordinates:**
+  - Decimal degrees (WGS84)
+  - Example: 45.6234, 6.7654
+
+- ✅ **Dates:**
+  - Format: YYYY-MM-DD
+  - Example: 2023-06-15
+
+- ✅ **Method-specific metadata:**
+  - **Acoustic**: hydrophone type, calibration equation, parameters
+  - **Physical sampler**: sampler type, sampling duration, efficiency
+  - **Dune tracking**: survey method, interval, dune dimensions
+
+**See our [Data Standards Guide](docs/data_standards.md) for details.**
+
+---
+
+### Quality Control
+
+All contributions go through validation:
+1. **Automated checks** (script validation)
+   - Required fields present
+   - Value ranges realistic
+   - Hierarchical consistency
+   - Date formats correct
+
+2. **Manual review**
+   - Methodology appropriate
+   - Metadata complete
+   - No duplicate entries
+   - Publications verified
+
+3. **Quality flags assigned:**
+   - **A** (Excellent): Published, peer-reviewed, rigorous
+   - **B** (Good): Reliable, clear methodology
+   - **C** (Acceptable): Usable but limitations
+   - **D** (Questionable): Incomplete metadata
+
+---
+
+### Attribution & Citation
+
+**Your contribution will be credited:**
+
+1. **In the database:**
+   - `data_provider` field contains your name/institution
+   - `contact_email` for questions (optional)
+   - `reference` field links to your publication (if any)
+
+2. **On the website:**
+   - Contributors page lists all data providers
+   - Statistics show contributions by institution
+
+3. **In publications:**
+   - Data papers acknowledge all contributors
+   - Major contributors (>50 measurements) invited as co-authors
+
+4. **Database citation:**
+   When you contribute, users will cite both:
+   - The database itself (with DOI)
+   - Your original publication (if applicable)
+
+**Example citation:**
+```
+Data from Smith et al. (2020, https://doi.org/10.xxxx/yyyy) accessed via 
+Global Bedload Transport Database v2.0 (https://doi.org/10.5281/zenodo.xxxxx)
+```
+
+---
+
+### What Happens After Contribution?
+
+1. **Validation** (1-7 days)
+   - Automated + manual checks
+   - We may contact you for clarifications
+
+2. **Integration** (1-2 weeks)
+   - Data added to database
+   - Statistics updated
+   - Website reflects changes
+
+3. **Notification**
+   - Email confirmation when live
+   - Link to your data on the map
+
+4. **Long-term**
+   - Data preserved with DOI
+   - Versioned releases
+   - Credit in perpetuity
+
+---
+
+### Need Help?
+
+**Before contributing:**
+- Check [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions
+- Review [example datasets](examples/) for formatting
+- Read [Data Standards Guide](docs/data_standards.md)
+
+**Questions?**
+- 📧 Email: [your-email@institution.edu]
+- 💬 GitHub Discussions: [Ask a question](https://github.com/geomorphbars/Global_Bedload_Observatory/discussions)
+- 🐛 Issues: [Report a problem](https://github.com/geomorphbars/Global_Bedload_Observatory/issues)
+
+---
+
+## 📖 Database Structure
+
+**Hierarchical organization:**
+
+```
+RIVER (e.g., Arc, Rhine, Colorado)
+  └─ SECTION (measurement reach)
+      └─ CAMPAIGN (field campaign, specific date)
+          └─ MEASUREMENT (bedload flux measurement)
+```
+
+**4 main tables:**
+1. **Rivers** → River characteristics (name, country, watershed area)
+2. **Sections** → Measurement sections (location, width, slope, morphology)
+3. **Campaigns** → Field campaigns (date, conditions, provider)
+4. **Measurements** → Bedload data (flux, discharge, grain size, method)
+
+**See [Database Documentation](docs/database_structure.md) for complete field descriptions.**
+
+---
+
+## 📜 License & Terms of Use
+
+**Data License:** [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
+- ✅ Free to use, share, and adapt
+- ✅ Commercial use allowed
+- ⚠️ Must provide attribution
+
+**Code License:** [MIT](LICENSE)
+- ✅ Open source scripts and tools
+- ✅ Free to use and modify
+
+**Terms:**
+- Cite the database and original publications
+- Acknowledge data providers
+- Share improvements back to the community
+
+---
+
+## 📝 How to Cite
 
 ### Cite the database:
 ```
-[Your Name] (2025). Global Bedload Transport Database (Version 1.0) [Data set]. 
-Zenodo. https://doi.org/10.5281/zenodo.XXXXXX
+[Maintainer Name] (2025). Global Bedload Transport Database. 
+Version 1.0. https://doi.org/10.5281/zenodo.XXXXXX
 ```
 
 ### BibTeX:
 ```bibtex
 @dataset{bedload_database_2025,
-  author    = {Your Name},
+  author    = {Maintainer Name},
   title     = {Global Bedload Transport Database},
   year      = {2025},
   publisher = {Zenodo},
   version   = {1.0},
   doi       = {10.5281/zenodo.XXXXXX},
-  url       = {https://doi.org/10.5281/zenodo.XXXXXX}
+  url       = {https://github.com/geomorphbars/Global_Bedload_Observatory}
 }
 ```
 
 ### Cite specific data:
-If using data from a specific publication, cite both:
-1. The original publication (see `reference` field)
-2. This database (for data access)
-
-Example:
+If using data from a specific study:
 ```
-Data from Smith et al. (2020, DOI:10.xxxx/yyyy) accessed via Global Bedload 
-Transport Database v1.0 (DOI:10.5281/zenodo.xxxxx).
+Data from Smith et al. (2020) accessed via Global Bedload Transport 
+Database v1.0 (DOI: 10.5281/zenodo.XXXXXX).
 ```
 
 ---
 
-## 📊 Database Structure
+## 👥 Contributors
 
-```
-RIVER (e.g., Arc, Rhône)
-  └── SECTION (measurement reach)
-       └── CAMPAIGN (field campaign on specific date)
-            └── MEASUREMENT (bedload flux measurement)
-```
+**Database maintained by:** [Your Name], [Your Institution]
 
-**4 main tables:**
-1. **Rivers** - River characteristics (watershed area, country)
-2. **Sections** - Measurement sections (location, width, slope)
-3. **Campaigns** - Field campaigns (date, conditions, provider)
-4. **Measurements** - Bedload data (flux, discharge, grain size, method)
+**Data contributors:**
+- [Institution 1] - X measurements from [River/Region]
+- [Institution 2] - Y measurements from [River/Region]
+- See [CONTRIBUTORS.md](CONTRIBUTORS.md) for complete list
 
-See [database structure](docs/database_structure.md) for details.
+**Want to be listed?** Contribute data! (See above)
 
 ---
 
-## 🔬 Methods Included
+## 🗺️ Roadmap
 
-| Method | n measurements | % of total |
-|--------|----------------|------------|
-| Physical samplers | 187 | 48% |
-| Passive acoustic | 98 | 25% |
-| Dune tracking | 65 | 17% |
-| Tracers | 27 | 7% |
-| Morphological budget | 10 | 3% |
+**Current version: 1.0**
 
----
+**Completed:**
+- ✅ Database structure and validation
+- ✅ Interactive web explorer
+- ✅ CSV and JSON exports
+- ✅ Basic visualizations
+- ✅ Static API
 
-## 🗺️ Geographic Coverage
+**Planned (v2.0):**
+- [ ] Time series data (continuous monitoring)
+- [ ] Suspended sediment integration
+- [ ] Transport formula comparison tools
+- [ ] Machine learning predictions
+- [ ] Mobile app
 
-**Continents:**
-- Europe: 245 measurements
-- North America: 89 measurements
-- Asia: 32 measurements
-- South America: 15 measurements
-- Oceania: 6 measurements
-
-**Top 5 countries by number of measurements:**
-1. 🇫🇷 France: 98
-2. 🇨🇭 Switzerland: 67
-3. 🇺🇸 USA: 54
-4. 🇮🇹 Italy: 32
-5. 🇨🇦 Canada: 28
-
----
-
-## 📜 License
-
-**Data:** [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)  
-You are free to use, share, and adapt the data with proper attribution.
-
-**Code:** [MIT License](LICENSE)  
-Scripts and tools in this repository are open source.
-
----
-
-## 🙏 Acknowledgments
-
-This database would not exist without contributions from:
-
-**Major contributors (>50 measurements):**
-- Dr. Jane Smith (University of XYZ) - 87 measurements, Arc River
-- Prof. John Doe (ETH Zurich) - 65 measurements, Swiss Alpine rivers
-- Dr. Marie Dupont (INRAE) - 54 measurements, French rivers
-
-**All contributors:** See [CONTRIBUTORS.md](CONTRIBUTORS.md)
-
-**Funding:**
-- Project ANR-XXX "Bedload Dynamics" (2020-2024)
-- ERC Grant XXX (2022-2027)
+**Long-term vision:**
+- Comprehensive global coverage (all continents)
+- Integration with discharge databases (GRDC)
+- Real-time data from monitoring networks
+- Community-driven data curation
 
 ---
 
 ## 📧 Contact
 
-**Database maintainer:**  
-[Your Name]  
-[Your Institution]  
-Email: [your.email@institution.edu]
+**Maintainer:** [Your Name]  
+**Institution:** [Your Institution/Lab]  
+**Email:** [your-email@institution.edu]  
+**GitHub:** [@geomorphbars](https://github.com/geomorphbars)
 
-**Issues and questions:**  
-- 🐛 Report bugs or issues: [GitHub Issues](https://github.com/USERNAME/bedload-global-database/issues)
-- 💬 Ask questions: [GitHub Discussions](https://github.com/USERNAME/bedload-global-database/discussions)
-- 📧 Email: [contact@email.com](mailto:contact@email.com)
+**For:**
+- 💡 Data contributions → Email or Pull Request
+- 🐛 Bug reports → [GitHub Issues](https://github.com/geomorphbars/Global_Bedload_Observatory/issues)
+- 💬 Questions → [GitHub Discussions](https://github.com/geomorphbars/Global_Bedload_Observatory/discussions)
+- 🤝 Collaborations → Email
+
+---
+
+## 🙏 Acknowledgments
+
+**This database would not exist without:**
+- All data contributors (see CONTRIBUTORS.md)
+- Funding: [Your grants/projects]
+- Infrastructure: GitHub, Leaflet, Chart.js, PapaParse
+- Community: Sediment transport researchers worldwide
 
 ---
 
 ## 📚 Related Resources
 
-- **GRDC** (Global Runoff Data Centre): Water discharge data
-- **GloRiC** (Global River Classification): River network database
-- **Bedload databases by region:**
-  - Alpine bedload database (Smith et al., 2020)
-  - US bedload compilation (Doe et al., 2019)
+**Other databases:**
+- [GRDC](https://www.bafg.de/GRDC/) - Global Runoff Data Centre
+- [GloRiC](https://www.hydrosheds.org/products/gloric) - Global River Classification
+- [HydroSHEDS](https://www.hydrosheds.org/) - Hydrological data
+
+**Relevant projects:**
+- [Your related projects]
+
+**Publications:**
+- [Key papers using this database]
 
 ---
 
-## 🔄 Version History
+**⭐ If you find this database useful, please star this repository!**
 
-- **v1.0.0** (2025-01-29): Initial release
-  - 387 measurements from 45 rivers
-  - Data from 1985-2024
-  - DOI: 10.5281/zenodo.XXXXXX
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-
----
-
-## 🚀 Future Plans
-
-- [ ] Integrate additional published datasets from literature
-- [ ] Develop rating curve analysis tools
-- [ ] Add transport formula comparison module
-- [ ] Create interactive visualization dashboard
-- [ ] Develop machine learning predictive models
-- [ ] Expand to include suspended load data (separate database)
-
----
-
-## ⭐ Star this repository
-
-If you find this database useful, please ⭐ star this repository to help others discover it!
-
----
-
-**Built with:** Python, Pandas, SQLite, Datasette, GitHub, Zenodo
-
-**Last updated:** January 2025
+**Last updated:** Auto-updated via homepage  
+**Version:** 1.0  
+**Status:** 🟢 Active development

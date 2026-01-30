@@ -33,6 +33,48 @@
             align-items: center;
         }
         
+		#tabs {
+			display: flex;
+			gap: 10px;
+			margin-top: 10px;
+		}
+
+		.tab {
+			background: rgba(255,255,255,0.2);
+			color: white;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 1em;
+			transition: all 0.3s;
+		}
+
+		.tab:hover {
+			background: rgba(255,255,255,0.3);
+		}
+
+		.tab.active {
+			background: rgba(255,255,255,0.4);
+			font-weight: bold;
+		}
+
+		#tab-map, #tab-browse, #tab-charts {
+			display: none;
+			height: calc(100vh - 120px);
+		}
+
+		#tab-map.active {
+			display: flex;
+		}
+
+		#tab-browse.active, #tab-charts.active {
+			display: block;
+			overflow-y: auto;
+			padding: 20px;
+			background: #f8f9fa;
+		}
+		
         #header h1 {
             font-size: 1.5em;
             font-weight: 600;
@@ -278,27 +320,71 @@
     </div>
     
     <div id="header">
-        <h1>🌊 Global Bedload Transport Database</h1>
-        <div id="stats">
-            <div class="stat-item">📊 <span id="total-measurements">0</span> measurements</div>
-            <div class="stat-item">🏞️ <span id="total-rivers">0</span> rivers</div>
-            <div class="stat-item">🌍 <span id="total-countries">0</span> countries</div>
-        </div>
-    </div>
+		<h1>🌊 Global Bedload Transport Database</h1>
+		<div id="tabs">
+			<button class="tab active" onclick="showTab('map')">🗺️ Map</button>
+			<button class="tab" onclick="showTab('browse')">📊 Browse All Data</button>
+			<button class="tab" onclick="showTab('charts')">📈 Global Charts</button>
+		</div>
+		<div id="stats">...</div>
+	</div>
     
-    <div id="main-container">
-        <div id="map"></div>
-        
-        <div id="sidebar" class="hidden">
-            <button class="close-btn" onclick="closeSidebar()">×</button>
-            <div id="sidebar-content">
-                <div class="welcome-message">
-                    <h2>👈 Select a site on the map</h2>
-                    <p>Click on any marker to view measurements, charts, and download data for that location.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Tab: Map (vue actuelle) -->
+	<div id="tab-map" class="active">
+		<div id="map" style="flex: 1;"></div>
+		<div id="sidebar">...</div>
+	</div>
+
+	<!-- Tab: Browse All Data (NOUVEAU) -->
+	<div id="tab-browse">
+		<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+			<h2>🔍 Filter & Search</h2>
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+				<select id="filter-country" onchange="applyFilters()">
+					<option value="">All Countries</option>
+				</select>
+				<select id="filter-method" onchange="applyFilters()">
+					<option value="">All Methods</option>
+				</select>
+				<input type="date" id="filter-date-start" onchange="applyFilters()" placeholder="Start date">
+				<input type="date" id="filter-date-end" onchange="applyFilters()" placeholder="End date">
+			</div>
+			<div style="margin-top: 15px;">
+				<button class="btn btn-success" onclick="exportAllData('csv')">📥 Export All (CSV)</button>
+				<button class="btn btn-success" onclick="exportAllData('json')">📥 Export All (JSON)</button>
+				<button class="btn" onclick="resetFilters()">🔄 Reset Filters</button>
+			</div>
+		</div>
+		
+		<div style="background: white; padding: 20px; border-radius: 8px;">
+			<h2>📋 All Measurements (<span id="filtered-count">0</span> results)</h2>
+			<div id="all-data-table"></div>
+		</div>
+	</div>
+
+	<!-- Tab: Global Charts (NOUVEAU) -->
+	<div id="tab-charts">
+		<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+			<h2>📊 Global Statistics</h2>
+			<canvas id="chart-global-flux-discharge" style="max-height: 500px;"></canvas>
+		</div>
+		
+		<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+			<h2>📅 Temporal Evolution (All Sites)</h2>
+			<canvas id="chart-global-temporal" style="max-height: 400px;"></canvas>
+		</div>
+		
+		<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+			<div style="background: white; padding: 20px; border-radius: 8px;">
+				<h3>By Method</h3>
+				<canvas id="chart-by-method"></canvas>
+			</div>
+			<div style="background: white; padding: 20px; border-radius: 8px;">
+				<h3>By Country</h3>
+				<canvas id="chart-by-country"></canvas>
+			</div>
+		</div>
+	</div>
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -686,6 +772,158 @@
             currentSection = null;
         }
         
+		// Tab management
+		function showTab(tabName) {
+			// Hide all tabs
+			document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+				tab.classList.remove('active');
+			});
+			
+			// Remove active from all buttons
+			document.querySelectorAll('.tab').forEach(btn => {
+				btn.classList.remove('active');
+			});
+			
+			// Show selected tab
+			document.getElementById('tab-' + tabName).classList.add('active');
+			event.target.classList.add('active');
+			
+			// Load data if needed
+			if (tabName === 'browse') {
+				loadBrowseData();
+			} else if (tabName === 'charts') {
+				loadGlobalCharts();
+			}
+		}
+
+		// Browse All Data functionality
+		let allMeasurementsData = [];
+		let filteredData = [];
+
+		function loadBrowseData() {
+			if (allMeasurementsData.length > 0) {
+				renderDataTable();
+				return;
+			}
+			
+			// Combine all data
+			allMeasurementsData = allData.measurements.map(m => {
+				const campaign = allData.campaigns.find(c => c.campaign_id === m.campaign_id);
+				const section = allData.sections.find(s => s.section_id === campaign?.section_id);
+				const river = allData.rivers.find(r => r.river_id === section?.river_id);
+				
+				return {
+					...m,
+					campaign_date: campaign?.campaign_date,
+					river_name: river?.river_name,
+					country: river?.country,
+					section_name: section?.section_name
+				};
+			});
+			
+			// Populate filters
+			const countries = [...new Set(allMeasurementsData.map(d => d.country))].filter(c => c).sort();
+			const methods = [...new Set(allMeasurementsData.map(d => d.measurement_method))].filter(m => m).sort();
+			
+			const countrySelect = document.getElementById('filter-country');
+			countries.forEach(c => {
+				const option = document.createElement('option');
+				option.value = c;
+				option.textContent = c;
+				countrySelect.appendChild(option);
+			});
+			
+			const methodSelect = document.getElementById('filter-method');
+			methods.forEach(m => {
+				const option = document.createElement('option');
+				option.value = m;
+				option.textContent = m;
+				methodSelect.appendChild(option);
+			});
+			
+			filteredData = allMeasurementsData;
+			renderDataTable();
+		}
+
+		function applyFilters() {
+			const country = document.getElementById('filter-country').value;
+			const method = document.getElementById('filter-method').value;
+			const dateStart = document.getElementById('filter-date-start').value;
+			const dateEnd = document.getElementById('filter-date-end').value;
+			
+			filteredData = allMeasurementsData.filter(d => {
+				if (country && d.country !== country) return false;
+				if (method && d.measurement_method !== method) return false;
+				if (dateStart && d.campaign_date < dateStart) return false;
+				if (dateEnd && d.campaign_date > dateEnd) return false;
+				return true;
+			});
+			
+			renderDataTable();
+		}
+
+		function resetFilters() {
+			document.getElementById('filter-country').value = '';
+			document.getElementById('filter-method').value = '';
+			document.getElementById('filter-date-start').value = '';
+			document.getElementById('filter-date-end').value = '';
+			filteredData = allMeasurementsData;
+			renderDataTable();
+		}
+
+		function renderDataTable() {
+			const container = document.getElementById('all-data-table');
+			document.getElementById('filtered-count').textContent = filteredData.length;
+			
+			let html = '<table class="measurements-table"><thead><tr>';
+			html += '<th>River</th><th>Section</th><th>Country</th><th>Date</th>';
+			html += '<th>Method</th><th>Flux (kg/s)</th><th>Discharge (m³/s)</th><th>d50 (mm)</th>';
+			html += '</tr></thead><tbody>';
+			
+			filteredData.forEach(d => {
+				html += '<tr>';
+				html += `<td>${d.river_name || 'N/A'}</td>`;
+				html += `<td>${d.section_name || 'N/A'}</td>`;
+				html += `<td>${d.country || 'N/A'}</td>`;
+				html += `<td>${d.campaign_date || 'N/A'}</td>`;
+				html += `<td>${d.measurement_method || 'N/A'}</td>`;
+				html += `<td>${d.bedload_rate_total_kg_s ? d.bedload_rate_total_kg_s.toFixed(3) : 'N/A'}</td>`;
+				html += `<td>${d.discharge_m3_s ? d.discharge_m3_s.toFixed(2) : 'N/A'}</td>`;
+				html += `<td>${d.d50_mm ? d.d50_mm.toFixed(1) : 'N/A'}</td>`;
+				html += '</tr>';
+			});
+			
+			html += '</tbody></table>';
+			container.innerHTML = html;
+		}
+
+		function exportAllData(format) {
+			const dataToExport = filteredData.map(d => ({
+				river: d.river_name,
+				section: d.section_name,
+				country: d.country,
+				date: d.campaign_date,
+				method: d.measurement_method,
+				flux_kg_s: d.bedload_rate_total_kg_s,
+				discharge_m3_s: d.discharge_m3_s,
+				d50_mm: d.d50_mm
+			}));
+			
+			if (format === 'csv') {
+				const csv = Papa.unparse(dataToExport);
+				downloadFile(csv, 'all_measurements.csv', 'text/csv');
+			} else {
+				const json = JSON.stringify(dataToExport, null, 2);
+				downloadFile(json, 'all_measurements.json', 'application/json');
+			}
+		}
+
+		// Global charts
+		function loadGlobalCharts() {
+			// Implementation similar to individual charts but with all data
+			// TODO: Add chart creation code here
+		}
+		
         // Initialize
         initMap();
         loadData();

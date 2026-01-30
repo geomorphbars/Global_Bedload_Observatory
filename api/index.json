@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "description": "Global Bedload Transport Database - Static JSON API",
+  "endpoints": {
+    "all": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/all.json",
+    "rivers": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/rivers.json",
+    "sections": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/sections.json",
+    "measurements": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/measurements.json",
+    "summary_by_country": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/summary_by_country.json",
+    "summary_by_method": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/summary_by_method.json",
+    "summary_by_river": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/summary_by_river.json",
+    "stats": "https://geomorphbars.github.io/Global_Bedload_Observatory/api/stats.json"
+  },
+  "usage": "Access any endpoint URL directly in your browser or via HTTP GET request"
+}

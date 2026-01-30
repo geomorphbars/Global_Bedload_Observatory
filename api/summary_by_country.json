@@ -1,0 +1,38 @@
+[
+  {
+    "country": "CHE",
+    "n_measurements": 4,
+    "avg_flux": 0.08,
+    "min_flux": 0.035,
+    "max_flux": 0.128,
+    "avg_discharge": 5.4,
+    "n_rivers": 1
+  },
+  {
+    "country": "FRA",
+    "n_measurements": 7,
+    "avg_flux": 0.1734,
+    "min_flux": 0.088,
+    "max_flux": 0.265,
+    "avg_discharge": 13.2571,
+    "n_rivers": 1
+  },
+  {
+    "country": "ITA",
+    "n_measurements": 1,
+    "avg_flux": 1.852,
+    "min_flux": 1.852,
+    "max_flux": 1.852,
+    "avg_discharge": 125.6,
+    "n_rivers": 1
+  },
+  {
+    "country": "USA",
+    "n_measurements": 3,
+    "avg_flux": 1.6327,
+    "min_flux": 0.186,
+    "max_flux": 2.567,
+    "avg_discharge": 67.7667,
+    "n_rivers": 1
+  }
+]

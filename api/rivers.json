@@ -1,0 +1,38 @@
+[
+  {
+    "river_id": "FRA_ARC",
+    "river_name": "Arc",
+    "country": "FRA",
+    "watershed_area_km2": 2000,
+    "main_tributary_of": NaN,
+    "river_order": 4,
+    "total_length_km": 130
+  },
+  {
+    "river_id": "CHE_VENOGE",
+    "river_name": "Venoge",
+    "country": "CHE",
+    "watershed_area_km2": 235,
+    "main_tributary_of": NaN,
+    "river_order": 3,
+    "total_length_km": 38
+  },
+  {
+    "river_id": "USA_SNAKE",
+    "river_name": "Snake River",
+    "country": "USA",
+    "watershed_area_km2": 280000,
+    "main_tributary_of": NaN,
+    "river_order": 6,
+    "total_length_km": 1735
+  },
+  {
+    "river_id": "ITA_ADIGE",
+    "river_name": "Adige",
+    "country": "ITA",
+    "watershed_area_km2": 12100,
+    "main_tributary_of": NaN,
+    "river_order": 5,
+    "total_length_km": 410
+  }
+]

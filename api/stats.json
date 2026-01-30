@@ -1,0 +1,27 @@
+{
+  "total_measurements": 15,
+  "total_rivers": 4,
+  "total_countries": 4,
+  "total_sections": 6,
+  "total_campaigns": 10,
+  "methods": [
+    "passive_acoustic",
+    "physical_sampler",
+    "dune_tracking"
+  ],
+  "countries": [
+    "FRA",
+    "CHE",
+    "USA",
+    "ITA"
+  ],
+  "date_range": {
+    "first": "2019-11-08",
+    "last": "2024-05-22"
+  },
+  "flux_range": {
+    "min": 0.035,
+    "max": 2.567,
+    "mean": 0.5522666666666667
+  }
+}
