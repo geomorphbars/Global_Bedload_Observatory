@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Convertit les CSV en base SQLite pour Datasette
-Crée également des vues utiles pour l'analyse
+Build SQLite database from CSV files
+Creates bedload_transport.db with proper schema and relationships
 """
 
 import sqlite3
@@ -9,213 +9,261 @@ import pandas as pd
 from pathlib import Path
 import sys
 
-def build_database():
-    """Crée la base SQLite depuis les CSV"""
+class DatabaseBuilder:
+    """Builds SQLite database from validated CSV files"""
     
-    data_dir = Path('data')
-    db_path = data_dir / 'bedload.db'
-    
-    # Vérifier que les CSV existent
-    required_files = ['rivers.csv', 'sections.csv', 'campaigns.csv', 'measurements.csv']
-    for filename in required_files:
-        if not (data_dir / filename).exists():
-            print(f"❌ Erreur : {filename} introuvable dans data/")
-            return False
-    
-    # Supprimer ancienne version si existe
-    if db_path.exists():
-        db_path.unlink()
-        print("🗑️  Ancienne base supprimée")
-    
-    # Connexion SQLite
-    conn = sqlite3.connect(db_path)
-    
-    print("\n🔄 Conversion CSV → SQLite...")
-    
-    # Charger chaque CSV dans une table
-    tables = {
-        'rivers': 'rivers.csv',
-        'sections': 'sections.csv',
-        'campaigns': 'campaigns.csv',
-        'measurements': 'measurements.csv'
-    }
-    
-    total_rows = 0
-    for table_name, csv_filename in tables.items():
-        csv_path = data_dir / csv_filename
+    def __init__(self, db_path='bedload_transport.db'):
+        self.db_path = db_path
+        self.conn = None
+        
+    def create_schema(self):
+        """Create database tables with proper schema"""
+        print("\n📦 Creating database schema...")
+        
+        cursor = self.conn.cursor()
+        
+        # RIVERS table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS rivers (
+                river_id TEXT PRIMARY KEY,
+                river_name TEXT NOT NULL,
+                country TEXT NOT NULL,
+                watershed_area_km2 REAL,
+                notes TEXT
+            )
+        ''')
+        
+        # SECTIONS table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sections (
+                section_id TEXT PRIMARY KEY,
+                river_id TEXT NOT NULL,
+                section_name TEXT NOT NULL,
+                latitude REAL NOT NULL,
+                longitude REAL NOT NULL,
+                elevation_m REAL,
+                bankfull_width_m REAL,
+                channel_slope REAL,
+                morphology_type TEXT,
+                notes TEXT,
+                FOREIGN KEY (river_id) REFERENCES rivers(river_id)
+            )
+        ''')
+        
+        # CAMPAIGNS table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS campaigns (
+                campaign_id TEXT PRIMARY KEY,
+                section_id TEXT NOT NULL,
+                campaign_date TEXT NOT NULL,
+                data_provider TEXT,
+                contact_email TEXT,
+                reference TEXT,
+                notes TEXT,
+                FOREIGN KEY (section_id) REFERENCES sections(section_id)
+            )
+        ''')
+        
+        # MEASUREMENTS table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS measurements (
+                measurement_id TEXT PRIMARY KEY,
+                campaign_id TEXT NOT NULL,
+                measurement_method TEXT NOT NULL,
+                bedload_rate_total_kg_s REAL NOT NULL,
+                discharge_m3_s REAL,
+                discharge_source TEXT,
+                discharge_station_code TEXT,
+                discharge_station_name TEXT,
+                d50_mm REAL,
+                d84_mm REAL,
+                d10_mm REAL,
+                water_depth_mean_m REAL,
+                flow_velocity_mean_m_s REAL,
+                acoustic_hydrophone_type TEXT,
+                acoustic_recorder_type TEXT,
+                acoustic_sensitivity_db REAL,
+                acoustic_calibration TEXT,
+                acoustic_calibration_a REAL,
+                acoustic_calibration_b REAL,
+                adcp_type TEXT,
+                adcp_equation_type TEXT,
+                adcp_measurement_duration_s REAL,
+                sampler_type TEXT,
+                dune_survey_method TEXT,
+                dune_echosounder_type TEXT,
+                dune_equation_type TEXT,
+                dune_interval_hours REAL,
+                FOREIGN KEY (campaign_id) REFERENCES campaigns(campaign_id)
+            )
+        ''')
+        
+        # Create indexes for faster queries
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sections_river ON sections(river_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_campaigns_section ON campaigns(section_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_measurements_campaign ON measurements(campaign_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_measurements_method ON measurements(measurement_method)')
+        
+        self.conn.commit()
+        print("  ✓ Schema created")
+        
+    def load_rivers(self, csv_path):
+        """Load rivers from CSV into database"""
+        print(f"\n📋 Loading {csv_path}...")
+        
         df = pd.read_csv(csv_path)
-        df.to_sql(table_name, conn, if_exists='replace', index=False)
-        print(f"  ✓ {table_name:15} {len(df):5} lignes")
-        total_rows += len(df)
-    
-    # Créer des vues utiles
-    print("\n🔗 Création des vues jointes...")
-    
-    # Vue complète : toutes les infos en une table
-    conn.execute("""
-    CREATE VIEW measurements_full AS
-    SELECT 
-        m.measurement_id,
-        m.measurement_method,
-        m.bedload_rate_total_kg_s,
-        m.bedload_rate_unit_mean_kg_s_m,
-        m.bedload_rate_unit_std_kg_s_m,
-        m.number_of_measurement_points,
-        m.integration_method,
-        m.spatial_coverage_percent,
-        m.discharge_m3_s,
-        m.water_depth_mean_m,
-        m.flow_velocity_mean_m_s,
-        m.shear_stress_mean_Pa,
-        m.d50_mm,
-        m.d84_mm,
-        m.uncertainty_percent,
-        m.data_version,
-        m.calibration_equation,
-        m.hydrophone_type,
-        m.sampler_type,
-        m.notes,
-        c.campaign_id,
-        c.campaign_date,
-        c.hydrological_context,
-        c.data_provider,
-        c.contact_email,
-        c.quality_flag,
-        s.section_id,
-        s.section_name,
-        s.latitude,
-        s.longitude,
-        s.elevation_m,
-        s.section_width_m,
-        s.channel_slope,
-        s.morphology_type,
-        r.river_id,
-        r.river_name,
-        r.country,
-        r.watershed_area_km2
-    FROM measurements m
-    JOIN campaigns c ON m.campaign_id = c.campaign_id
-    JOIN sections s ON c.section_id = s.section_id
-    JOIN rivers r ON s.river_id = r.river_id
-    """)
-    print("  ✓ measurements_full (vue principale)")
-    
-    # Vue résumé par rivière
-    conn.execute("""
-    CREATE VIEW summary_by_river AS
-    SELECT 
-        r.river_id,
-        r.river_name,
-        r.country,
-        r.watershed_area_km2,
-        COUNT(DISTINCT s.section_id) as n_sections,
-        COUNT(DISTINCT c.campaign_id) as n_campaigns,
-        COUNT(m.measurement_id) as n_measurements,
-        MIN(c.campaign_date) as first_measurement,
-        MAX(c.campaign_date) as last_measurement,
-        ROUND(AVG(m.bedload_rate_total_kg_s), 4) as avg_bedload_rate_kg_s,
-        ROUND(MIN(m.bedload_rate_total_kg_s), 4) as min_bedload_rate_kg_s,
-        ROUND(MAX(m.bedload_rate_total_kg_s), 4) as max_bedload_rate_kg_s,
-        ROUND(AVG(m.discharge_m3_s), 2) as avg_discharge_m3_s,
-        ROUND(AVG(m.d50_mm), 1) as avg_d50_mm
-    FROM rivers r
-    LEFT JOIN sections s ON r.river_id = s.river_id
-    LEFT JOIN campaigns c ON s.section_id = c.section_id
-    LEFT JOIN measurements m ON c.campaign_id = m.campaign_id
-    GROUP BY r.river_id, r.river_name, r.country, r.watershed_area_km2
-    ORDER BY n_measurements DESC
-    """)
-    print("  ✓ summary_by_river")
-    
-    # Vue résumé par méthode
-    conn.execute("""
-    CREATE VIEW summary_by_method AS
-    SELECT 
-        measurement_method,
-        COUNT(*) as n_measurements,
-        ROUND(AVG(bedload_rate_total_kg_s), 4) as avg_bedload_rate_kg_s,
-        ROUND(AVG(discharge_m3_s), 2) as avg_discharge_m3_s,
-        ROUND(AVG(d50_mm), 1) as avg_d50_mm,
-        ROUND(AVG(number_of_measurement_points), 1) as avg_n_points
-    FROM measurements
-    GROUP BY measurement_method
-    ORDER BY n_measurements DESC
-    """)
-    print("  ✓ summary_by_method")
-    
-    # Vue résumé par pays
-    conn.execute("""
-    CREATE VIEW summary_by_country AS
-    SELECT 
-        r.country,
-        COUNT(DISTINCT r.river_id) as n_rivers,
-        COUNT(DISTINCT s.section_id) as n_sections,
-        COUNT(m.measurement_id) as n_measurements,
-        ROUND(AVG(m.bedload_rate_total_kg_s), 4) as avg_bedload_rate_kg_s
-    FROM rivers r
-    LEFT JOIN sections s ON r.river_id = s.river_id
-    LEFT JOIN campaigns c ON s.section_id = c.section_id
-    LEFT JOIN measurements m ON c.campaign_id = m.campaign_id
-    GROUP BY r.country
-    ORDER BY n_measurements DESC
-    """)
-    print("  ✓ summary_by_country")
-    
-    # Vue pour équations de calibration acoustique
-    conn.execute("""
-    CREATE VIEW acoustic_calibrations AS
-    SELECT 
-        calibration_equation,
-        COUNT(*) as n_measurements,
-        AVG(bedload_rate_total_kg_s) as avg_bedload_rate,
-        AVG(discharge_m3_s) as avg_discharge,
-        GROUP_CONCAT(DISTINCT hydrophone_type) as hydrophone_types,
-        GROUP_CONCAT(DISTINCT processing_software) as software_versions
-    FROM measurements
-    WHERE measurement_method = 'passive_acoustic'
-    GROUP BY calibration_equation
-    """)
-    print("  ✓ acoustic_calibrations")
-    
-    # Créer des index pour performances
-    print("\n⚡ Création des index...")
-    conn.execute("CREATE INDEX idx_measurements_method ON measurements(measurement_method)")
-    conn.execute("CREATE INDEX idx_campaigns_date ON campaigns(campaign_date)")
-    conn.execute("CREATE INDEX idx_sections_coords ON sections(latitude, longitude)")
-    conn.execute("CREATE INDEX idx_rivers_country ON rivers(country)")
-    print("  ✓ Index créés")
-    
-    conn.commit()
-    
-    # Statistiques finales
-    cursor = conn.execute("SELECT COUNT(*) FROM measurements_full")
-    n_measurements = cursor.fetchone()[0]
-    
-    cursor = conn.execute("SELECT COUNT(DISTINCT country) FROM rivers")
-    n_countries = cursor.fetchone()[0]
-    
-    conn.close()
-    
-    # Afficher résumé
-    print("\n" + "="*60)
-    print("✅ BASE SQLITE CRÉÉE AVEC SUCCÈS")
-    print("="*60)
-    print(f"📁 Fichier       : {db_path}")
-    print(f"💾 Taille        : {db_path.stat().st_size / 1024:.1f} KB")
-    print(f"📊 Mesures       : {n_measurements}")
-    print(f"🌍 Pays          : {n_countries}")
-    print(f"📋 Total lignes  : {total_rows}")
-    print("\n🚀 Tester avec : datasette data/bedload.db")
-    print("="*60)
-    
-    return True
+        
+        # Replace NaN with None for SQL
+        df = df.where(pd.notnull(df), None)
+        
+        # Insert into database
+        df.to_sql('rivers', self.conn, if_exists='append', index=False)
+        
+        print(f"  ✓ Loaded {len(df)} rivers")
+        
+    def load_sections(self, csv_path):
+        """Load sections from CSV into database"""
+        print(f"\n📋 Loading {csv_path}...")
+        
+        df = pd.read_csv(csv_path)
+        
+        # Replace NaN with None
+        df = df.where(pd.notnull(df), None)
+        
+        # Insert into database
+        df.to_sql('sections', self.conn, if_exists='append', index=False)
+        
+        print(f"  ✓ Loaded {len(df)} sections")
+        
+    def load_campaigns(self, csv_path):
+        """Load campaigns from CSV into database"""
+        print(f"\n📋 Loading {csv_path}...")
+        
+        df = pd.read_csv(csv_path)
+        
+        # Replace NaN with None
+        df = df.where(pd.notnull(df), None)
+        
+        # Insert into database
+        df.to_sql('campaigns', self.conn, if_exists='append', index=False)
+        
+        print(f"  ✓ Loaded {len(df)} campaigns")
+        
+    def load_measurements(self, csv_path):
+        """Load measurements from CSV into database"""
+        print(f"\n📋 Loading {csv_path}...")
+        
+        df = pd.read_csv(csv_path)
+        
+        # Replace NaN with None
+        df = df.where(pd.notnull(df), None)
+        
+        # Insert into database
+        df.to_sql('measurements', self.conn, if_exists='append', index=False)
+        
+        # Print method distribution
+        methods = df['measurement_method'].value_counts()
+        print(f"  ✓ Loaded {len(df)} measurements:")
+        for method, count in methods.items():
+            print(f"    - {method}: {count}")
+        
+    def print_statistics(self):
+        """Print database statistics"""
+        print("\n" + "="*60)
+        print("DATABASE STATISTICS")
+        print("="*60)
+        
+        cursor = self.conn.cursor()
+        
+        # Count records in each table
+        tables = ['rivers', 'sections', 'campaigns', 'measurements']
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            count = cursor.fetchone()[0]
+            print(f"{table.upper():15s}: {count:5d} records")
+        
+        # Method distribution
+        cursor.execute("""
+            SELECT measurement_method, COUNT(*) as count 
+            FROM measurements 
+            GROUP BY measurement_method
+            ORDER BY count DESC
+        """)
+        
+        print("\nMeasurement methods:")
+        for row in cursor.fetchall():
+            print(f"  {row[0]:20s}: {row[1]:5d}")
+        
+        # Countries
+        cursor.execute("""
+            SELECT country, COUNT(*) as count 
+            FROM rivers 
+            GROUP BY country
+            ORDER BY count DESC
+        """)
+        
+        print("\nCountries:")
+        for row in cursor.fetchall():
+            print(f"  {row[0]:20s}: {row[1]:5d} rivers")
+        
+        print("="*60)
+        
+    def build(self, data_dir='data'):
+        """Build complete database from CSV files"""
+        data_path = Path(data_dir)
+        
+        # Check files exist
+        required_files = ['rivers.csv', 'sections.csv', 'campaigns.csv', 'measurements.csv']
+        for filename in required_files:
+            filepath = data_path / filename
+            if not filepath.exists():
+                print(f"❌ ERROR: File not found: {filepath}")
+                print(f"   Make sure all CSV files are in the '{data_dir}/' folder")
+                sys.exit(1)
+        
+        print("="*60)
+        print("BUILDING BEDLOAD TRANSPORT DATABASE")
+        print("="*60)
+        
+        # Delete existing database
+        db_file = Path(self.db_path)
+        if db_file.exists():
+            print(f"\n🗑️  Removing existing database: {self.db_path}")
+            db_file.unlink()
+        
+        # Connect to database
+        self.conn = sqlite3.connect(self.db_path)
+        
+        try:
+            # Create schema
+            self.create_schema()
+            
+            # Load data in hierarchical order
+            self.load_rivers(data_path / 'rivers.csv')
+            self.load_sections(data_path / 'sections.csv')
+            self.load_campaigns(data_path / 'campaigns.csv')
+            self.load_measurements(data_path / 'measurements.csv')
+            
+            # Print statistics
+            self.print_statistics()
+            
+            print(f"\n✅ Database built successfully: {self.db_path}")
+            print(f"   Size: {db_file.stat().st_size / 1024:.1f} KB")
+            
+        except Exception as e:
+            print(f"\n❌ ERROR building database: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+        
+        finally:
+            if self.conn:
+                self.conn.close()
 
-if __name__ == "__main__":
-    try:
-        success = build_database()
-        sys.exit(0 if success else 1)
-    except Exception as e:
-        print(f"\n❌ ERREUR : {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+def main():
+    """Main function"""
+    builder = DatabaseBuilder('bedload_transport.db')
+    builder.build('data')
+
+if __name__ == '__main__':
+    main()

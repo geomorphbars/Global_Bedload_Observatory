@@ -1,11 +1,11 @@
-campaign_id,section_id,campaign_date,campaign_start_time,campaign_end_time,hydrological_context,data_provider,contact_email,data_source_type,reference,quality_flag,notes
-CAMP_001,FRA_ARC_S01,2023-06-15,10:30,14:45,snowmelt,Laboratoire EDYTEM,edytem@univ-smb.fr,field_measurement,,A,Mesure pendant crue de fonte nivale
-CAMP_002,FRA_ARC_S01,2023-07-20,09:00,12:30,baseflow,Laboratoire EDYTEM,edytem@univ-smb.fr,field_measurement,,B,Conditions d'étiage
-CAMP_003,FRA_ARC_S02,2022-05-10,,,flood,Laboratoire EDYTEM,edytem@univ-smb.fr,field_measurement,,A,
-CAMP_004,CHE_VENOGE_S01,2021-08-12,11:00,15:00,baseflow,EPFL,hydro@epfl.ch,field_measurement,,A,
-CAMP_005,CHE_VENOGE_S02,2022-03-25,,,snowmelt,EPFL,hydro@epfl.ch,field_measurement,,B,
-CAMP_006,USA_SNAKE_S01,2020-06-05,08:00,16:30,flood,USGS Wyoming,usgs@gov.us,published_paper,DOI:10.1234/example2020,A,High flow event
-CAMP_007,USA_SNAKE_S01,2020-09-18,,,baseflow,USGS Wyoming,usgs@gov.us,published_paper,DOI:10.1234/example2020,A,
-CAMP_008,ITA_ADIGE_S01,2019-11-08,10:00,14:00,baseflow,Universita di Trento,fluvial@unitn.it,field_measurement,,B,
-CAMP_009,FRA_ARC_S01,2024-05-22,09:30,13:00,snowmelt,Laboratoire EDYTEM,edytem@univ-smb.fr,field_measurement,,A,Nouvelle campagne printemps 2024
-CAMP_010,CHE_VENOGE_S01,2023-10-15,,,baseflow,EPFL,hydro@epfl.ch,field_measurement,,B,
+campaign_id,section_id,campaign_date,data_provider,contact_email,reference,notes
+CAMP_001,FRA_ARC_S01,2023-06-15,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Snowmelt flood event
+CAMP_002,FRA_ARC_S01,2023-07-20,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Baseflow conditions
+CAMP_003,CHE_VENOGE_S01,2022-05-10,EPFL - LHE,contact@epfl.ch,doi:10.1234/example2022,Spring high flow
+CAMP_004,USA_SNAKE_S01,2021-08-05,USGS - Idaho Water Science Center,usgs@example.gov,,Summer baseflow
+CAMP_005,ITA_ADIGE_S01,2023-10-12,Università di Trento,contact@unitn.it,doi:10.5678/adige2023,Autumn flood event
+CAMP_006,FRA_ARC_S02,2024-05-08,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Comparative study downstream
+CAMP_007,CHE_VENOGE_S02,2023-03-15,EPFL - LHE,contact@epfl.ch,,Early spring conditions
+CAMP_008,FRA_ARC_S01,2024-06-01,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Follow-up measurement
+CAMP_009,USA_SNAKE_S01,2020-06-18,USGS - Idaho Water Science Center,usgs@example.gov,doi:10.9876/snake2020,Snowmelt peak flow
+CAMP_010,ITA_ADIGE_S01,2022-09-22,Università di Trento,contact@unitn.it,,Baseflow sampling

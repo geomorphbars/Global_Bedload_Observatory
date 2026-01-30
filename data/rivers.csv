@@ -1,5 +1,5 @@
-river_id,river_name,country,watershed_area_km2,main_tributary_of,river_order,total_length_km
-FRA_ARC,Arc,FRA,2000,,4,130
-CHE_VENOGE,Venoge,CHE,235,,3,38
-USA_SNAKE,Snake River,USA,280000,,6,1735
-ITA_ADIGE,Adige,ITA,12100,,5,410
+river_id,river_name,country,watershed_area_km2,notes
+FRA_ARC,Arc,FRA,2000,Alpine river with snowmelt regime
+CHE_VENOGE,Venoge,CHE,235,Small catchment in western Switzerland
+USA_SNAKE,Snake River,USA,280000,Major tributary of Columbia River
+ITA_ADIGE,Adige,ITA,12100,Second longest river in Italy

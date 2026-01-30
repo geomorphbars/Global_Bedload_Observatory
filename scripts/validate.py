@@ -1,435 +1,403 @@
 #!/usr/bin/env python3
 """
-Script de validation pour la base de données mondiale du charriage
-Structure hiérarchique : RIVERS → SECTIONS → CAMPAIGNS → MEASUREMENTS
-Vérifie la cohérence et la complétude des fichiers CSV
+Validation script for Global Bedload Transport Database CSV files
+Validates data structure, required fields, data types, and hierarchical consistency
 """
 
 import pandas as pd
-import numpy as np
-from datetime import datetime
 import sys
-import json
+from pathlib import Path
+import re
 
 class BedloadDatabaseValidator:
-    """Validateur pour la base de données de charriage (structure hiérarchique)"""
+    """Validator for bedload transport database CSV files"""
     
     def __init__(self):
         self.errors = []
         self.warnings = []
         
-    def validate_rivers(self, rivers_file):
-        """Valide le fichier rivers.csv"""
-        print("\n=== VALIDATION DES RIVIÈRES ===")
+    def validate_rivers(self, filepath):
+        """Validate rivers.csv"""
+        print(f"\n{'='*60}")
+        print(f"Validating RIVERS: {filepath}")
+        print(f"{'='*60}")
         
+        # Required columns
+        required_cols = ['river_id', 'river_name', 'country']
+        optional_cols = ['watershed_area_km2', 'notes']
+        all_cols = required_cols + optional_cols
+        
+        # Load CSV
         try:
-            df = pd.read_csv(rivers_file)
+            df = pd.read_csv(filepath)
         except Exception as e:
-            self.errors.append(f"Erreur lecture {rivers_file}: {e}")
+            self.errors.append(f"Cannot read {filepath}: {e}")
             return None
-            
-        # Vérifier colonnes obligatoires
-        required_cols = ['river_id', 'river_name', 'country', 'watershed_area_km2']
         
+        # Check required columns
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            self.errors.append(f"Missing required columns in rivers.csv: {missing_cols}")
+            return None
+        
+        # Check for unexpected columns
+        unexpected_cols = [col for col in df.columns if col not in all_cols]
+        if unexpected_cols:
+            self.warnings.append(f"Unexpected columns in rivers.csv: {unexpected_cols}")
+        
+        # Check required fields are not empty
         for col in required_cols:
-            if col not in df.columns:
-                self.errors.append(f"Colonne obligatoire manquante dans rivers: {col}")
+            empty_count = df[col].isna().sum()
+            if empty_count > 0:
+                self.errors.append(f"Column '{col}' has {empty_count} empty values (required field)")
         
-        # Vérifier valeurs manquantes
-        for col in required_cols:
-            if col in df.columns:
-                missing = df[col].isna().sum()
-                if missing > 0:
-                    self.errors.append(f"{missing} valeurs manquantes dans rivers.{col}")
-        
-        # Vérifier unicité des river_id
-        if 'river_id' in df.columns:
-            duplicates = df[df.duplicated('river_id', keep=False)]
-            if len(duplicates) > 0:
-                self.errors.append(f"river_id dupliqués: {duplicates['river_id'].tolist()}")
-        
-        # Vérifier codes pays (3 lettres majuscules)
+        # Check country codes (should be 3 letters)
         if 'country' in df.columns:
-            invalid_country = df[~df['country'].str.match(r'^[A-Z]{3}$', na=False)]
-            if len(invalid_country) > 0:
-                self.warnings.append(f"Codes pays potentiellement invalides: {invalid_country['river_id'].tolist()}")
+            invalid_countries = df[~df['country'].str.match(r'^[A-Z]{3}$', na=False)]['country'].unique()
+            if len(invalid_countries) > 0:
+                self.errors.append(f"Invalid country codes (should be 3 letters): {invalid_countries.tolist()}")
         
-        # Vérifier watershed_area cohérente
+        # Check for duplicate river_id
+        duplicates = df[df.duplicated(subset=['river_id'], keep=False)]
+        if len(duplicates) > 0:
+            self.errors.append(f"Duplicate river_id found: {duplicates['river_id'].tolist()}")
+        
+        # Check watershed_area_km2 is positive
         if 'watershed_area_km2' in df.columns:
-            invalid_area = df[df['watershed_area_km2'] <= 0]
-            if len(invalid_area) > 0:
-                self.errors.append(f"Surfaces de bassin invalides (<= 0): {invalid_area['river_id'].tolist()}")
+            negative = df[df['watershed_area_km2'] < 0]
+            if len(negative) > 0:
+                self.errors.append(f"Negative watershed_area_km2 for: {negative['river_id'].tolist()}")
         
-        print(f"✓ {len(df)} rivières vérifiées")
+        print(f"✓ Loaded {len(df)} rivers")
         return df
     
-    def validate_sections(self, sections_file, rivers_df=None):
-        """Valide le fichier sections.csv"""
-        print("\n=== VALIDATION DES SECTIONS ===")
+    def validate_sections(self, filepath, rivers_df):
+        """Validate sections.csv"""
+        print(f"\n{'='*60}")
+        print(f"Validating SECTIONS: {filepath}")
+        print(f"{'='*60}")
         
+        # Required columns
+        required_cols = ['section_id', 'river_id', 'section_name', 'latitude', 'longitude']
+        optional_cols = ['elevation_m', 'bankfull_width_m', 'channel_slope', 'morphology_type', 'notes']
+        all_cols = required_cols + optional_cols
+        
+        # Load CSV
         try:
-            df = pd.read_csv(sections_file)
+            df = pd.read_csv(filepath)
         except Exception as e:
-            self.errors.append(f"Erreur lecture {sections_file}: {e}")
+            self.errors.append(f"Cannot read {filepath}: {e}")
             return None
         
-        # Vérifier colonnes obligatoires
-        required_cols = ['section_id', 'river_id', 'section_name', 'latitude', 
-                        'longitude', 'elevation_m', 'section_width_m']
+        # Check required columns
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            self.errors.append(f"Missing required columns in sections.csv: {missing_cols}")
+            return None
         
+        # Check for unexpected columns
+        unexpected_cols = [col for col in df.columns if col not in all_cols]
+        if unexpected_cols:
+            self.warnings.append(f"Unexpected columns in sections.csv: {unexpected_cols}")
+        
+        # Check required fields are not empty
         for col in required_cols:
-            if col not in df.columns:
-                self.errors.append(f"Colonne obligatoire manquante dans sections: {col}")
+            empty_count = df[col].isna().sum()
+            if empty_count > 0:
+                self.errors.append(f"Column '{col}' has {empty_count} empty values (required field)")
         
-        # Vérifier valeurs manquantes
-        for col in required_cols:
-            if col in df.columns:
-                missing = df[col].isna().sum()
-                if missing > 0:
-                    self.errors.append(f"{missing} valeurs manquantes dans sections.{col}")
+        # Check for duplicate section_id
+        duplicates = df[df.duplicated(subset=['section_id'], keep=False)]
+        if len(duplicates) > 0:
+            self.errors.append(f"Duplicate section_id found: {duplicates['section_id'].tolist()}")
         
-        # Vérifier unicité des section_id
-        if 'section_id' in df.columns:
-            duplicates = df[df.duplicated('section_id', keep=False)]
-            if len(duplicates) > 0:
-                self.errors.append(f"section_id dupliqués: {duplicates['section_id'].tolist()}")
-        
-        # Vérifier cohérence avec rivers
-        if rivers_df is not None and 'river_id' in df.columns:
-            unknown_rivers = set(df['river_id']) - set(rivers_df['river_id'])
-            if unknown_rivers:
-                self.errors.append(f"river_id inconnus dans sections: {list(unknown_rivers)}")
-        
-        # Vérifier plage de latitude/longitude
+        # Check latitude range (-90 to 90)
         if 'latitude' in df.columns:
             invalid_lat = df[(df['latitude'] < -90) | (df['latitude'] > 90)]
             if len(invalid_lat) > 0:
-                self.errors.append(f"Latitudes invalides: {invalid_lat['section_id'].tolist()}")
-                
+                self.errors.append(f"Invalid latitude (must be -90 to 90): {invalid_lat['section_id'].tolist()}")
+        
+        # Check longitude range (-180 to 180)
         if 'longitude' in df.columns:
             invalid_lon = df[(df['longitude'] < -180) | (df['longitude'] > 180)]
             if len(invalid_lon) > 0:
-                self.errors.append(f"Longitudes invalides: {invalid_lon['section_id'].tolist()}")
+                self.errors.append(f"Invalid longitude (must be -180 to 180): {invalid_lon['section_id'].tolist()}")
         
-        # Vérifier section_width
-        if 'section_width_m' in df.columns:
-            invalid_width = df[df['section_width_m'] <= 0]
-            if len(invalid_width) > 0:
-                self.errors.append(f"Largeurs invalides (<= 0): {invalid_width['section_id'].tolist()}")
+        # Check river_id exists in rivers.csv
+        if rivers_df is not None:
+            missing_rivers = df[~df['river_id'].isin(rivers_df['river_id'])]
+            if len(missing_rivers) > 0:
+                self.errors.append(f"river_id not found in rivers.csv: {missing_rivers['section_id'].tolist()}")
         
-        # Vérifier pente
+        # Check bankfull_width_m is positive
+        if 'bankfull_width_m' in df.columns:
+            negative = df[df['bankfull_width_m'] < 0]
+            if len(negative) > 0:
+                self.errors.append(f"Negative bankfull_width_m for: {negative['section_id'].tolist()}")
+        
+        # Check channel_slope is between 0 and 1
         if 'channel_slope' in df.columns:
             invalid_slope = df[(df['channel_slope'] < 0) | (df['channel_slope'] > 1)]
             if len(invalid_slope) > 0:
-                self.warnings.append(f"Pentes suspectes (< 0 ou > 1): {invalid_slope['section_id'].tolist()}")
+                self.errors.append(f"Invalid channel_slope (must be 0-1): {invalid_slope['section_id'].tolist()}")
         
-        print(f"✓ {len(df)} sections vérifiées")
+        print(f"✓ Loaded {len(df)} sections")
         return df
     
-    def validate_campaigns(self, campaigns_file, sections_df=None):
-        """Valide le fichier campaigns.csv"""
-        print("\n=== VALIDATION DES CAMPAGNES ===")
+    def validate_campaigns(self, filepath, sections_df):
+        """Validate campaigns.csv"""
+        print(f"\n{'='*60}")
+        print(f"Validating CAMPAIGNS: {filepath}")
+        print(f"{'='*60}")
         
+        # Required columns
+        required_cols = ['campaign_id', 'section_id', 'campaign_date']
+        optional_cols = ['data_provider', 'contact_email', 'reference', 'notes']
+        all_cols = required_cols + optional_cols
+        
+        # Load CSV
         try:
-            df = pd.read_csv(campaigns_file)
+            df = pd.read_csv(filepath)
         except Exception as e:
-            self.errors.append(f"Erreur lecture {campaigns_file}: {e}")
+            self.errors.append(f"Cannot read {filepath}: {e}")
             return None
         
-        # Vérifier colonnes obligatoires
-        required_cols = ['campaign_id', 'section_id', 'campaign_date', 
-                        'data_provider', 'contact_email']
+        # Check required columns
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            self.errors.append(f"Missing required columns in campaigns.csv: {missing_cols}")
+            return None
         
+        # Check for unexpected columns
+        unexpected_cols = [col for col in df.columns if col not in all_cols]
+        if unexpected_cols:
+            self.warnings.append(f"Unexpected columns in campaigns.csv: {unexpected_cols}")
+        
+        # Check required fields are not empty
         for col in required_cols:
-            if col not in df.columns:
-                self.errors.append(f"Colonne obligatoire manquante dans campaigns: {col}")
+            empty_count = df[col].isna().sum()
+            if empty_count > 0:
+                self.errors.append(f"Column '{col}' has {empty_count} empty values (required field)")
         
-        # Vérifier valeurs manquantes
-        for col in required_cols:
-            if col in df.columns:
-                missing = df[col].isna().sum()
-                if missing > 0:
-                    self.errors.append(f"{missing} valeurs manquantes dans campaigns.{col}")
+        # Check for duplicate campaign_id
+        duplicates = df[df.duplicated(subset=['campaign_id'], keep=False)]
+        if len(duplicates) > 0:
+            self.errors.append(f"Duplicate campaign_id found: {duplicates['campaign_id'].tolist()}")
         
-        # Vérifier unicité des campaign_id
-        if 'campaign_id' in df.columns:
-            duplicates = df[df.duplicated('campaign_id', keep=False)]
-            if len(duplicates) > 0:
-                self.errors.append(f"campaign_id dupliqués: {duplicates['campaign_id'].tolist()}")
-        
-        # Vérifier cohérence avec sections
-        if sections_df is not None and 'section_id' in df.columns:
-            unknown_sections = set(df['section_id']) - set(sections_df['section_id'])
-            if unknown_sections:
-                self.errors.append(f"section_id inconnus dans campaigns: {list(unknown_sections)}")
-        
-        # Vérifier format des dates
+        # Check date format (YYYY-MM-DD)
         if 'campaign_date' in df.columns:
             try:
-                pd.to_datetime(df['campaign_date'], format='%Y-%m-%d', errors='raise')
+                pd.to_datetime(df['campaign_date'], format='%Y-%m-%d', errors='coerce')
+                invalid_dates = df[pd.to_datetime(df['campaign_date'], format='%Y-%m-%d', errors='coerce').isna()]
+                if len(invalid_dates) > 0:
+                    self.errors.append(f"Invalid date format (use YYYY-MM-DD): {invalid_dates['campaign_id'].tolist()}")
             except:
-                self.errors.append("Format de date invalide dans campaigns (attendu: YYYY-MM-DD)")
+                self.errors.append(f"Cannot parse campaign_date")
         
-        # Vérifier quality_flag
-        if 'quality_flag' in df.columns:
-            valid_flags = ['A', 'B', 'C', 'D']
-            invalid_flags = df[~df['quality_flag'].isin(valid_flags) & df['quality_flag'].notna()]
-            if len(invalid_flags) > 0:
-                self.errors.append(f"Quality flags invalides dans campaigns: {invalid_flags['quality_flag'].unique().tolist()}")
+        # Check section_id exists in sections.csv
+        if sections_df is not None:
+            missing_sections = df[~df['section_id'].isin(sections_df['section_id'])]
+            if len(missing_sections) > 0:
+                self.errors.append(f"section_id not found in sections.csv: {missing_sections['campaign_id'].tolist()}")
         
-        # Vérifier emails
+        # Check email format (if provided)
         if 'contact_email' in df.columns:
-            invalid_email = df[~df['contact_email'].str.contains('@', na=False)]
-            if len(invalid_email) > 0:
-                self.warnings.append(f"Emails potentiellement invalides: {invalid_email['campaign_id'].tolist()}")
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            invalid_emails = df[df['contact_email'].notna() & ~df['contact_email'].str.match(email_pattern, na=False)]
+            if len(invalid_emails) > 0:
+                self.warnings.append(f"Invalid email format: {invalid_emails['campaign_id'].tolist()}")
         
-        print(f"✓ {len(df)} campagnes vérifiées")
+        print(f"✓ Loaded {len(df)} campaigns")
         return df
     
-    def validate_measurements(self, measurements_file, campaigns_df=None):
-        """Valide le fichier measurements.csv"""
-        print("\n=== VALIDATION DES MESURES ===")
+    def validate_measurements(self, filepath, campaigns_df):
+        """Validate measurements.csv"""
+        print(f"\n{'='*60}")
+        print(f"Validating MEASUREMENTS: {filepath}")
+        print(f"{'='*60}")
         
+        # Required columns
+        required_cols = ['measurement_id', 'campaign_id', 'measurement_method', 'bedload_rate_total_kg_s']
+        
+        # Optional general columns
+        optional_general = ['discharge_m3_s', 'discharge_source', 'discharge_station_code', 
+                           'discharge_station_name', 'd50_mm', 'd84_mm', 'd10_mm', 
+                           'water_depth_mean_m', 'flow_velocity_mean_m_s']
+        
+        # Method-specific columns
+        passive_acoustic_cols = ['acoustic_hydrophone_type', 'acoustic_recorder_type', 
+                                'acoustic_sensitivity_db', 'acoustic_calibration', 
+                                'acoustic_calibration_a', 'acoustic_calibration_b']
+        
+        active_acoustic_cols = ['adcp_type', 'adcp_equation_type', 'adcp_measurement_duration_s']
+        
+        sampler_cols = ['sampler_type']
+        
+        dune_cols = ['dune_survey_method', 'dune_echosounder_type', 
+                     'dune_equation_type', 'dune_interval_hours']
+        
+        all_cols = (required_cols + optional_general + passive_acoustic_cols + 
+                   active_acoustic_cols + sampler_cols + dune_cols)
+        
+        # Load CSV
         try:
-            df = pd.read_csv(measurements_file)
+            df = pd.read_csv(filepath)
         except Exception as e:
-            self.errors.append(f"Erreur lecture {measurements_file}: {e}")
+            self.errors.append(f"Cannot read {filepath}: {e}")
             return None
         
-        # Vérifier colonnes obligatoires
-        required_cols = ['measurement_id', 'campaign_id', 'measurement_method',
-                        'bedload_rate_total_kg_s', 'discharge_m3_s', 'd50_mm', 'data_version']
+        # Check required columns
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            self.errors.append(f"Missing required columns in measurements.csv: {missing_cols}")
+            return None
         
+        # Check for unexpected columns
+        unexpected_cols = [col for col in df.columns if col not in all_cols]
+        if unexpected_cols:
+            self.warnings.append(f"Unexpected columns in measurements.csv: {unexpected_cols}")
+        
+        # Check required fields are not empty
         for col in required_cols:
-            if col not in df.columns:
-                self.errors.append(f"Colonne obligatoire manquante dans measurements: {col}")
+            empty_count = df[col].isna().sum()
+            if empty_count > 0:
+                self.errors.append(f"Column '{col}' has {empty_count} empty values (required field)")
         
-        # Vérifier valeurs manquantes dans colonnes obligatoires
-        for col in required_cols:
-            if col in df.columns:
-                missing = df[col].isna().sum()
-                if missing > 0:
-                    self.errors.append(f"{missing} valeurs manquantes dans measurements.{col}")
+        # Check for duplicate measurement_id
+        duplicates = df[df.duplicated(subset=['measurement_id'], keep=False)]
+        if len(duplicates) > 0:
+            self.errors.append(f"Duplicate measurement_id found: {duplicates['measurement_id'].tolist()}")
         
-        # Vérifier unicité des measurement_id
-        if 'measurement_id' in df.columns:
-            duplicates = df[df.duplicated('measurement_id', keep=False)]
-            if len(duplicates) > 0:
-                self.errors.append(f"measurement_id dupliqués: {duplicates['measurement_id'].tolist()}")
-        
-        # Vérifier cohérence avec campaigns
-        if campaigns_df is not None and 'campaign_id' in df.columns:
-            unknown_campaigns = set(df['campaign_id']) - set(campaigns_df['campaign_id'])
-            if unknown_campaigns:
-                self.errors.append(f"campaign_id inconnus dans measurements: {list(unknown_campaigns)}")
-        
-        # Vérifier méthodes de mesure
-        valid_methods = ['physical_sampler', 'dune_tracking', 'passive_acoustic', 
-                        'active_acoustic', 'tracer', 'morphological_budget', 'other']
+        # Check measurement_method values
+        allowed_methods = ['passive_acoustic', 'active_acoustic', 'physical_sampler', 'dune_tracking']
         if 'measurement_method' in df.columns:
-            invalid_methods = df[~df['measurement_method'].isin(valid_methods)]
+            invalid_methods = df[~df['measurement_method'].isin(allowed_methods)]
             if len(invalid_methods) > 0:
-                self.errors.append(f"Méthodes invalides: {invalid_methods['measurement_method'].unique().tolist()}")
+                self.errors.append(f"Invalid measurement_method (allowed: {allowed_methods}): {invalid_methods['measurement_id'].tolist()}")
         
-        # Vérifier flux de charriage
-        if 'bedload_rate_total_kg_s' in df.columns:
-            negative_bedload = df[df['bedload_rate_total_kg_s'] < 0]
-            if len(negative_bedload) > 0:
-                self.errors.append(f"Flux de charriage négatifs: {negative_bedload['measurement_id'].tolist()}")
-            
-            extreme_bedload = df[df['bedload_rate_total_kg_s'] > 1000]
-            if len(extreme_bedload) > 0:
-                self.warnings.append(f"Flux de charriage très élevés (> 1000 kg/s): {extreme_bedload['measurement_id'].tolist()}")
+        # Check discharge_source values
+        allowed_sources = ['hydrometric_station', 'adcp_measurement', 'rating_curve', 
+                          'current_meter', 'model', 'estimated', 'other']
+        if 'discharge_source' in df.columns:
+            invalid_sources = df[df['discharge_source'].notna() & ~df['discharge_source'].isin(allowed_sources)]
+            if len(invalid_sources) > 0:
+                self.errors.append(f"Invalid discharge_source (allowed: {allowed_sources}): {invalid_sources['measurement_id'].tolist()}")
         
-        # Vérifier débits
+        # Check that discharge_station_code/name are filled only when source=hydrometric_station
+        if 'discharge_source' in df.columns and 'discharge_station_code' in df.columns:
+            has_station_without_source = df[(df['discharge_station_code'].notna()) & 
+                                           (df['discharge_source'] != 'hydrometric_station')]
+            if len(has_station_without_source) > 0:
+                self.warnings.append(f"discharge_station_code filled but source != hydrometric_station: {has_station_without_source['measurement_id'].tolist()}")
+        
+        # Check campaign_id exists in campaigns.csv
+        if campaigns_df is not None:
+            missing_campaigns = df[~df['campaign_id'].isin(campaigns_df['campaign_id'])]
+            if len(missing_campaigns) > 0:
+                self.errors.append(f"campaign_id not found in campaigns.csv: {missing_campaigns['measurement_id'].tolist()}")
+        
+        # Check bedload_rate is positive
+        negative_flux = df[df['bedload_rate_total_kg_s'] < 0]
+        if len(negative_flux) > 0:
+            self.errors.append(f"Negative bedload_rate_total_kg_s: {negative_flux['measurement_id'].tolist()}")
+        
+        # Check discharge is positive
         if 'discharge_m3_s' in df.columns:
-            negative_discharge = df[df['discharge_m3_s'] <= 0]
-            if len(negative_discharge) > 0:
-                self.errors.append(f"Débits invalides (<= 0): {negative_discharge['measurement_id'].tolist()}")
+            negative_q = df[df['discharge_m3_s'] < 0]
+            if len(negative_q) > 0:
+                self.errors.append(f"Negative discharge_m3_s: {negative_q['measurement_id'].tolist()}")
         
-        # Vérifier granulométrie
-        if 'd50_mm' in df.columns:
-            invalid_d50 = df[(df['d50_mm'] <= 0) | (df['d50_mm'] > 1000)]
-            if len(invalid_d50) > 0:
-                self.warnings.append(f"D50 suspects (<= 0 ou > 1000 mm): {invalid_d50['measurement_id'].tolist()}")
+        # Check grain sizes are positive and logical (d10 < d50 < d84)
+        if all(col in df.columns for col in ['d10_mm', 'd50_mm', 'd84_mm']):
+            invalid_grain = df[(df['d10_mm'] >= df['d50_mm']) | (df['d50_mm'] >= df['d84_mm'])]
+            if len(invalid_grain) > 0:
+                self.warnings.append(f"Grain size not in order d10 < d50 < d84: {invalid_grain['measurement_id'].tolist()}")
         
-        # Vérifier cohérence d50 < d84
-        if 'd50_mm' in df.columns and 'd84_mm' in df.columns:
-            invalid_grain_size = df[(df['d50_mm'] > df['d84_mm']) & df['d84_mm'].notna()]
-            if len(invalid_grain_size) > 0:
-                self.errors.append(f"D50 > D84 (incohérent): {invalid_grain_size['measurement_id'].tolist()}")
+        # Method-specific validation
+        for method, method_cols in [
+            ('passive_acoustic', passive_acoustic_cols),
+            ('active_acoustic', active_acoustic_cols),
+            ('physical_sampler', sampler_cols),
+            ('dune_tracking', dune_cols)
+        ]:
+            method_rows = df[df['measurement_method'] == method]
+            if len(method_rows) > 0:
+                # Check that at least some method-specific columns are filled
+                filled_cols = sum([method_rows[col].notna().any() for col in method_cols if col in df.columns])
+                if filled_cols == 0:
+                    self.warnings.append(f"Method '{method}' used but no {method}-specific columns filled")
         
-        # Vérifier cohérence flux unitaires
-        if all(col in df.columns for col in ['bedload_rate_unit_mean_kg_s_m', 
-                                              'bedload_rate_unit_min_kg_s_m', 
-                                              'bedload_rate_unit_max_kg_s_m']):
-            # min <= mean <= max
-            invalid_range = df[
-                (df['bedload_rate_unit_min_kg_s_m'] > df['bedload_rate_unit_mean_kg_s_m']) |
-                (df['bedload_rate_unit_mean_kg_s_m'] > df['bedload_rate_unit_max_kg_s_m'])
-            ]
-            invalid_range = invalid_range[invalid_range[['bedload_rate_unit_min_kg_s_m', 
-                                                         'bedload_rate_unit_mean_kg_s_m',
-                                                         'bedload_rate_unit_max_kg_s_m']].notna().all(axis=1)]
-            if len(invalid_range) > 0:
-                self.errors.append(f"Flux unitaires incohérents (min > mean ou mean > max): {invalid_range['measurement_id'].tolist()}")
+        print(f"✓ Loaded {len(df)} measurements")
+        print(f"  - passive_acoustic: {len(df[df['measurement_method'] == 'passive_acoustic'])}")
+        print(f"  - active_acoustic: {len(df[df['measurement_method'] == 'active_acoustic'])}")
+        print(f"  - physical_sampler: {len(df[df['measurement_method'] == 'physical_sampler'])}")
+        print(f"  - dune_tracking: {len(df[df['measurement_method'] == 'dune_tracking'])}")
         
-        # Vérifier incertitudes
-        if 'uncertainty_percent' in df.columns:
-            invalid_uncertainty = df[(df['uncertainty_percent'] < 0) | (df['uncertainty_percent'] > 100)]
-            if len(invalid_uncertainty) > 0:
-                self.warnings.append(f"Incertitudes hors plage [0-100%]: {invalid_uncertainty['measurement_id'].tolist()}")
-        
-        # Vérifier spatial_coverage_percent
-        if 'spatial_coverage_percent' in df.columns:
-            invalid_coverage = df[(df['spatial_coverage_percent'] < 0) | (df['spatial_coverage_percent'] > 100)]
-            if len(invalid_coverage) > 0:
-                self.warnings.append(f"Couverture spatiale hors plage [0-100%]: {invalid_coverage['measurement_id'].tolist()}")
-        
-        # Vérifications spécifiques à l'acoustique passive
-        acoustic_measurements = df[df['measurement_method'] == 'passive_acoustic']
-        if len(acoustic_measurements) > 0:
-            # Vérifier que calibration_equation est renseigné
-            missing_calib = acoustic_measurements[acoustic_measurements['calibration_equation'].isna()]
-            if len(missing_calib) > 0:
-                self.warnings.append(f"Équation de calibration manquante pour mesures acoustiques: {missing_calib['measurement_id'].tolist()}")
-            
-            # Vérifier équations de calibration valides
-            valid_calibrations = ['Le_Guern_2021', 'Nasr_2023', 'site_specific']
-            invalid_calib = acoustic_measurements[
-                ~acoustic_measurements['calibration_equation'].isin(valid_calibrations) & 
-                acoustic_measurements['calibration_equation'].notna()
-            ]
-            if len(invalid_calib) > 0:
-                self.warnings.append(f"Équations de calibration non standard: {invalid_calib['calibration_equation'].unique().tolist()}")
-            
-            # Si site_specific, vérifier que calibration_reference est rempli
-            site_specific = acoustic_measurements[acoustic_measurements['calibration_equation'] == 'site_specific']
-            missing_ref = site_specific[site_specific['calibration_reference'].isna()]
-            if len(missing_ref) > 0:
-                self.errors.append(f"calibration_reference obligatoire pour site_specific: {missing_ref['measurement_id'].tolist()}")
-        
-        # Vérifier JSON dans calibration_parameters
-        if 'calibration_parameters' in df.columns:
-            for idx, row in df[df['calibration_parameters'].notna()].iterrows():
-                try:
-                    json.loads(row['calibration_parameters'])
-                except json.JSONDecodeError:
-                    # Si ce n'est pas du JSON, vérifier que c'est du texte simple acceptable
-                    if not isinstance(row['calibration_parameters'], str):
-                        self.warnings.append(f"calibration_parameters invalide pour {row['measurement_id']}: pas JSON ni texte")
-        
-        print(f"✓ {len(df)} mesures vérifiées")
         return df
     
-    def validate_hierarchy(self, rivers_df, sections_df, campaigns_df, measurements_df):
-        """Valide la cohérence de la hiérarchie complète"""
-        print("\n=== VALIDATION DE LA HIÉRARCHIE ===")
-        
-        # Vérifier que chaque section a une rivière
-        if rivers_df is not None and sections_df is not None:
-            orphan_sections = set(sections_df['section_id']) - set(
-                sections_df.merge(rivers_df, on='river_id')['section_id']
-            )
-            if orphan_sections:
-                self.errors.append(f"Sections sans rivière valide: {list(orphan_sections)}")
-        
-        # Vérifier que chaque campagne a une section
-        if sections_df is not None and campaigns_df is not None:
-            orphan_campaigns = set(campaigns_df['campaign_id']) - set(
-                campaigns_df.merge(sections_df, on='section_id')['campaign_id']
-            )
-            if orphan_campaigns:
-                self.errors.append(f"Campagnes sans section valide: {list(orphan_campaigns)}")
-        
-        # Vérifier que chaque mesure a une campagne
-        if campaigns_df is not None and measurements_df is not None:
-            orphan_measurements = set(measurements_df['measurement_id']) - set(
-                measurements_df.merge(campaigns_df, on='campaign_id')['measurement_id']
-            )
-            if orphan_measurements:
-                self.errors.append(f"Mesures sans campagne valide: {list(orphan_measurements)}")
-        
-        print("✓ Hiérarchie validée")
-    
-    def generate_statistics(self, rivers_df, sections_df, campaigns_df, measurements_df):
-        """Génère des statistiques sur la base"""
-        print("\n=== STATISTIQUES ===")
-        
-        if rivers_df is not None:
-            print(f"  Rivières: {len(rivers_df)}")
-            if 'country' in rivers_df.columns:
-                print(f"  Pays représentés: {rivers_df['country'].nunique()}")
-        
-        if sections_df is not None:
-            print(f"  Sections: {len(sections_df)}")
-        
-        if campaigns_df is not None:
-            print(f"  Campagnes: {len(campaigns_df)}")
-            if 'campaign_date' in campaigns_df.columns:
-                dates = pd.to_datetime(campaigns_df['campaign_date'])
-                print(f"  Période: {dates.min()} à {dates.max()}")
-        
-        if measurements_df is not None:
-            print(f"  Mesures: {len(measurements_df)}")
-            if 'measurement_method' in measurements_df.columns:
-                print(f"  Méthodes utilisées:")
-                for method, count in measurements_df['measurement_method'].value_counts().items():
-                    print(f"    - {method}: {count}")
-    
-    def generate_report(self):
-        """Génère un rapport de validation"""
-        print("\n" + "="*60)
-        print("RAPPORT DE VALIDATION")
-        print("="*60)
+    def print_summary(self):
+        """Print validation summary"""
+        print(f"\n{'='*60}")
+        print("VALIDATION SUMMARY")
+        print(f"{'='*60}")
         
         if len(self.errors) == 0 and len(self.warnings) == 0:
-            print("\n✓ AUCUNE ERREUR - Base de données valide!")
+            print("✅ ALL CHECKS PASSED - NO ERRORS OR WARNINGS")
         else:
             if len(self.errors) > 0:
-                print(f"\n❌ ERREURS CRITIQUES ({len(self.errors)}):")
+                print(f"\n❌ ERRORS ({len(self.errors)}):")
                 for i, error in enumerate(self.errors, 1):
                     print(f"  {i}. {error}")
             
             if len(self.warnings) > 0:
-                print(f"\n⚠️  AVERTISSEMENTS ({len(self.warnings)}):")
+                print(f"\n⚠️  WARNINGS ({len(self.warnings)}):")
                 for i, warning in enumerate(self.warnings, 1):
                     print(f"  {i}. {warning}")
         
-        print("\n" + "="*60)
+        print(f"\n{'='*60}")
         
-        return len(self.errors) == 0
+        if len(self.errors) > 0:
+            print("❌ VALIDATION FAILED - Fix errors before using data")
+            return False
+        elif len(self.warnings) > 0:
+            print("⚠️  VALIDATION PASSED WITH WARNINGS - Review warnings")
+            return True
+        else:
+            print("✅ VALIDATION PASSED - Data is ready to use")
+            return True
 
 def main():
-    """Point d'entrée principal"""
+    """Main validation function"""
+    # File paths
+    data_dir = Path('data')
     
-    print("="*60)
-    print("VALIDATEUR - Base de Données Mondiale du Charriage")
-    print("Structure hiérarchique : RIVERS → SECTIONS → CAMPAIGNS → MEASUREMENTS")
-    print("="*60)
+    rivers_file = data_dir / 'rivers.csv'
+    sections_file = data_dir / 'sections.csv'
+    campaigns_file = data_dir / 'campaigns.csv'
+    measurements_file = data_dir / 'measurements.csv'
     
+    # Check files exist
+    for filepath in [rivers_file, sections_file, campaigns_file, measurements_file]:
+        if not filepath.exists():
+            print(f"❌ ERROR: File not found: {filepath}")
+            print(f"   Make sure you run this script from the project root directory")
+            print(f"   and that all CSV files are in the 'data/' folder")
+            sys.exit(1)
+    
+    # Create validator
     validator = BedloadDatabaseValidator()
     
-    # Validation hiérarchique
-    rivers_df = validator.validate_rivers('data/rivers.csv')
-    sections_df = validator.validate_sections('data/sections.csv', rivers_df)
-    campaigns_df = validator.validate_campaigns('data/campaigns.csv', sections_df)
-    measurements_df = validator.validate_measurements('data/measurements.csv', campaigns_df)
+    # Validate in hierarchical order
+    rivers_df = validator.validate_rivers(rivers_file)
+    sections_df = validator.validate_sections(sections_file, rivers_df)
+    campaigns_df = validator.validate_campaigns(campaigns_file, sections_df)
+    measurements_df = validator.validate_measurements(measurements_file, campaigns_df)
     
-    # Validation de la hiérarchie complète
-    if all(df is not None for df in [rivers_df, sections_df, campaigns_df, measurements_df]):
-        validator.validate_hierarchy(rivers_df, sections_df, campaigns_df, measurements_df)
-        validator.generate_statistics(rivers_df, sections_df, campaigns_df, measurements_df)
+    # Print summary
+    success = validator.print_summary()
     
-    # Génération du rapport
-    is_valid = validator.generate_report()
-    
-    if is_valid:
-        print("\n✅ Validation réussie - Prêt pour intégration!")
-        return 0
-    else:
-        print("\n❌ Validation échouée - Corriger les erreurs avant de continuer")
-        return 1
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    main()
