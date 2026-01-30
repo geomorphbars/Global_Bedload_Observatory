@@ -394,7 +394,7 @@
 						<input type="date" id="filter-date-end" onchange="applyFilters()" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
 					</div>
 					
-					<button onclick="resetFilters()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+					<button onclick="resetFiltersBrowse()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
 						🔄 Reset Filters
 					</button>
 					
@@ -438,14 +438,20 @@
 		<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
 			<h2>🔍 Filter & Search</h2>
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-				<select id="filter-country" onchange="applyFilters()">
+				<select id="filter-river-browse" onchange="applyFiltersBrowse()">
+					<option value="">All Rivers</option>
+				</select>
+				<select id="filter-section-browse" onchange="applyFiltersBrowse()">
+					<option value="">All Sections</option>
+				</select>
+				<select id="filter-country-browse" onchange="applyFiltersBrowse()">
 					<option value="">All Countries</option>
 				</select>
-				<select id="filter-method" onchange="applyFilters()">
+				<select id="filter-method-browse" onchange="applyFiltersBrowse()">
 					<option value="">All Methods</option>
 				</select>
-				<input type="date" id="filter-date-start" onchange="applyFilters()" placeholder="Start date">
-				<input type="date" id="filter-date-end" onchange="applyFilters()" placeholder="End date">
+				<input type="date" id="filter-date-start-browse" onchange="applyFiltersBrowse()" placeholder="Start date">
+				<input type="date" id="filter-date-end-browse" onchange="applyFiltersBrowse()" placeholder="End date">
 			</div>
 			<div style="margin-top: 15px;">
 				<button class="btn btn-success" onclick="exportAllData('csv')">📥 Export All (CSV)</button>
@@ -958,7 +964,7 @@
 			// Populate filters
 			// Populate river dropdown
 			const rivers = [...new Set(allMeasurementsData.map(d => d.river_id))].filter(r => r).sort();
-			const riverSelect = document.getElementById('filter-river');
+			const riverSelect = document.getElementById('filter-river-browse');
 			riverSelect.innerHTML = '<option value="">All Rivers</option>';
 			rivers.forEach(riverId => {
 				const riverData = allData.rivers.find(r => r.river_id === riverId);
@@ -972,7 +978,7 @@
 			
 			// Populate section dropdown
 			const sections = [...new Set(allMeasurementsData.map(d => d.section_id))].filter(s => s).sort();
-			const sectionSelect = document.getElementById('filter-section');
+			const sectionSelect = document.getElementById('filter-section-browse');
 			sectionSelect.innerHTML = '<option value="">All Sections</option>';
 			sections.forEach(sectionId => {
 				const sectionData = allData.sections.find(s => s.section_id === sectionId);
@@ -988,7 +994,7 @@
 			const countries = [...new Set(allMeasurementsData.map(d => d.country))].filter(c => c).sort();
 			const methods = [...new Set(allMeasurementsData.map(d => d.measurement_method))].filter(m => m).sort();
 			
-			const countrySelect = document.getElementById('filter-country');
+			const countrySelect = document.getElementById('filter-country-browse');
 			countries.forEach(c => {
 				const option = document.createElement('option');
 				option.value = c;
@@ -996,7 +1002,7 @@
 				countrySelect.appendChild(option);
 			});
 			
-			const methodSelect = document.getElementById('filter-method');
+			const methodSelect = document.getElementById('filter-method-browse');
 			methods.forEach(m => {
 				const option = document.createElement('option');
 				option.value = m;
@@ -1028,6 +1034,27 @@
 			
 			renderDataTable();
 		}
+		
+		function applyFiltersBrowse() {
+			const river = document.getElementById('filter-river-browse').value;
+			const section = document.getElementById('filter-section-browse').value;
+			const country = document.getElementById('filter-country-browse').value;
+			const method = document.getElementById('filter-method-browse').value;
+			const dateStart = document.getElementById('filter-date-start-browse').value;
+			const dateEnd = document.getElementById('filter-date-end-browse').value;
+			
+			filteredData = allMeasurementsData.filter(d => {
+				if (river && d.river_id !== river) return false;
+				if (section && d.section_id !== section) return false;
+				if (country && d.country !== country) return false;
+				if (method && d.measurement_method !== method) return false;
+				if (dateStart && d.campaign_date < dateStart) return false;
+				if (dateEnd && d.campaign_date > dateEnd) return false;
+				return true;
+			});
+			
+			renderDataTable();
+		}
 
 		function resetFilters() {
 			document.getElementById('filter-river').value = '';
@@ -1036,6 +1063,17 @@
 			document.getElementById('filter-method').value = '';
 			document.getElementById('filter-date-start').value = '';
 			document.getElementById('filter-date-end').value = '';
+			filteredData = allMeasurementsData;
+			renderDataTable();
+		}
+		
+		function resetFiltersBrowse() {
+			document.getElementById('filter-river-browse').value = '';
+			document.getElementById('filter-section-browse').value = '';
+			document.getElementById('filter-country-browse').value = '';
+			document.getElementById('filter-method-browse').value = '';
+			document.getElementById('filter-date-start-browse').value = '';
+			document.getElementById('filter-date-end-browse').value = '';
 			filteredData = allMeasurementsData;
 			renderDataTable();
 		}
