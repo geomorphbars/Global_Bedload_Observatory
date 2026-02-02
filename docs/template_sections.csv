@@ -1,0 +1,83 @@
+section_id,river_id,section_name,latitude,longitude,elevation_m,bankfull_width_m,channel_slope,morphology_type,notes
+FRA_ARC_S01,FRA_ARC,Bourg-Saint-Maurice,45.6234,6.7654,850,15,0.012,pool-riffle,Upstream reach with natural conditions
+FRA_ARC_S02,FRA_ARC,Centron,45.5891,6.7123,780,18,0.008,plane-bed,Downstream of confluence
+CHE_VENOGE_S01,CHE_VENOGE,Ecublens,46.5234,6.5654,420,8,0.005,meandering,Urban reach
+USA_SNAKE_S01,USA_SNAKE,Hells Canyon,45.2456,-116.7891,520,120,0.002,braided,Large gravel-bed river
+ITA_ADIGE_S01,ITA_ADIGE,Trento,46.0667,11.1167,195,45,0.003,wandering,Alpine valley setting
+CHE_VENOGE_S02,CHE_VENOGE,Lausanne,46.5167,6.6333,375,6,0.008,pool-riffle,Natural forested reach
+
+# ==============================================================================
+# SECTIONS TEMPLATE - INSTRUCTIONS
+# ==============================================================================
+# 
+# IMPORTANT: DELETE ALL LINES STARTING WITH '#' BEFORE USING THIS FILE
+#               Keep only the header line and data rows
+#
+# REQUIRED COLUMNS (✅ cannot be empty):
+# ------------------------------------
+# - section_id: Unique section identifier (format: RIVERID_S01, RIVERID_S02, etc.)
+#               Examples: FRA_ARC_S01, USA_COLORADO_S01, CHE_RHONE_S02
+#
+# - river_id: River identifier (must exist in rivers.csv)
+#             Examples: FRA_ARC, USA_COLORADO, CHE_RHONE
+#
+# - section_name: Name of the measurement section (location name)
+#                 Examples: Bourg-Saint-Maurice, Hells Canyon, Trento
+#
+# - latitude: Latitude in decimal degrees (WGS84)
+#             Range: -90 to +90
+#             Examples: 45.6234, -33.8688, 46.5167
+#
+# - longitude: Longitude in decimal degrees (WGS84)
+#              Range: -180 to +180
+#              Examples: 6.7654, 151.2093, -116.7891
+#
+# OPTIONAL COLUMNS (can be left empty):
+# ----------------------------------------
+# - elevation_m: Elevation above sea level in meters
+#                Examples: 850, 195, 420
+#
+# - bankfull_width_m: Bankfull channel width in meters
+#                     (morphological feature, not flow-dependent)
+#                     This is the width of the active channel at bankfull discharge
+#                     Examples: 15, 120, 8
+#
+# - channel_slope: Channel slope (m/m, dimensionless)
+#                  Examples: 0.012, 0.002, 0.008
+#                  Typical ranges: 0.001-0.05 for gravel-bed rivers
+#
+# - morphology_type: Channel morphology type
+#                    Examples: pool-riffle, plane-bed, braided, meandering, 
+#                             step-pool, wandering, straight
+#
+# - notes: Additional information (context, accessibility, etc.)
+"#          Examples: ""Upstream of dam"", ""Natural forested reach"", "
+"#                   ""Regulated flow"""
+#
+# HOW TO USE:
+# -----------
+# 1. Copy the example rows above (FRA_ARC_S01, CHE_VENOGE_S01, etc.)
+# 2. Replace with your own data
+# 3. To add a section, add a new line following the same format
+# 4. Keep the column order as shown
+# 5. If an optional value is missing, leave it empty: FRA_ARC_S01,FRA_ARC,Name,45.6,6.7,,,,
+# 6. DELETE ALL INSTRUCTION LINES (lines starting with #) before using
+# 7. Each section must have a unique section_id
+# 8. Each section must belong to a river that exists in rivers.csv
+#
+# COORDINATE GUIDELINES:
+# ----------------------
+# - Use decimal degrees, NOT degrees/minutes/seconds
+# - Use WGS84 datum (most common, used by GPS)
+# - Precision: 4-5 decimal places is usually sufficient (~10m accuracy)
+# - Northern hemisphere: positive latitude
+# - Southern hemisphere: negative latitude
+# - East of Greenwich: positive longitude
+# - West of Greenwich: negative longitude
+#
+# FINAL FILE STRUCTURE:
+# ---------------------
+# section_id,river_id,section_name,latitude,longitude,elevation_m,bankfull_width_m,channel_slope,morphology_type,notes
+# FRA_ARC_S01,FRA_ARC,Bourg-Saint-Maurice,45.6234,6.7654,850,15,0.012,pool-riffle,Upstream reach
+# YOUR_SECTION_1,YOUR_RIVER_1,Location1,45.123,6.456,800,20,0.010,plane-bed,Notes here
+# ==============================================================================

@@ -1,0 +1,91 @@
+campaign_id,section_id,campaign_date,data_provider,contact_email,reference,notes
+CAMP_001,FRA_ARC_S01,2023-06-15,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Snowmelt flood event
+CAMP_002,FRA_ARC_S01,2023-07-20,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Baseflow conditions
+CAMP_003,CHE_VENOGE_S01,2022-05-10,EPFL - LHE,contact@epfl.ch,doi:10.1234/example2022,Spring high flow
+CAMP_004,USA_SNAKE_S01,2021-08-05,USGS - Idaho Water Science Center,usgs@example.gov,,Summer baseflow
+CAMP_005,ITA_ADIGE_S01,2023-10-12,UniversitÃ  di Trento,contact@unitn.it,doi:10.5678/adige2023,Autumn flood event
+CAMP_006,FRA_ARC_S02,2024-05-08,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Comparative study downstream
+CAMP_007,CHE_VENOGE_S02,2023-03-15,EPFL - LHE,contact@epfl.ch,,Early spring conditions
+CAMP_008,FRA_ARC_S01,2024-06-01,J. Le Guern - EDYTEM,jules.leguern@univ-smb.fr,,Follow-up measurement
+CAMP_009,USA_SNAKE_S01,2020-06-18,USGS - Idaho Water Science Center,usgs@example.gov,doi:10.9876/snake2020,Snowmelt peak flow
+CAMP_010,ITA_ADIGE_S01,2022-09-22,UniversitÃ  di Trento,contact@unitn.it,,Baseflow sampling
+
+# ==============================================================================
+# CAMPAIGNS TEMPLATE - INSTRUCTIONS
+# ==============================================================================
+# 
+# IMPORTANT: DELETE ALL LINES STARTING WITH '#' BEFORE USING THIS FILE
+#               Keep only the header line and data rows
+#
+# REQUIRED COLUMNS (cannot be empty):
+# ------------------------------------
+# - campaign_id: Unique campaign identifier
+#                Format: CAMP_001, CAMP_002, etc.
+#                Examples: CAMP_001, CAMP_ARC_2023_06, CAMP_VENOGE_01
+#
+# - section_id: Section identifier (must exist in sections.csv)
+#               Examples: FRA_ARC_S01, USA_SNAKE_S01, CHE_VENOGE_S01
+#
+# - campaign_date: Date of the field campaign
+#                  Format: YYYY-MM-DD (ISO 8601)
+#                  Examples: 2023-06-15, 2022-12-08, 2024-01-30
+#
+# OPTIONAL COLUMNS (can be left empty):
+# ----------------------------------------
+# - data_provider: Person or institution who provided/collected the data
+"#                  Examples: ""J. Doe - EDYTEM"", ""USGS - Idaho Water Science Center"","
+"#                           ""EPFL - Laboratory of Hydraulics"", ""J. Smith, Université de Lyon"""
+#
+# - contact_email: Email address for contact about this data
+#                  Format: valid email address
+#                  Examples: john.doe@institution.edu, contact@epfl.ch
+#
+# - reference: Publication reference or DOI
+"#              Examples: ""doi:10.1234/example2023"", ""Smith et al. (2023) J. Hydrology"","
+"#                       ""https://doi.org/10.xxxx/yyyy"""
+#
+# - notes: Additional information about the campaign
+"#          Examples: ""Snowmelt flood event"", ""Baseflow conditions"", "
+"#                   ""High flow event"", ""Regulated flow downstream of dam"""
+#
+# HOW TO USE:
+# -----------
+# 1. Copy the example rows above (CAMP_001, CAMP_002, etc.)
+# 2. Replace with your own data
+# 3. To add a campaign, add a new line following the same format
+# 4. Keep the column order as shown
+# 5. If an optional value is missing, leave it empty: CAMP_001,FRA_ARC_S01,2023-06-15,,,
+# 6. DELETE ALL INSTRUCTION LINES (lines starting with #) before using
+# 7. Each campaign must have a unique campaign_id
+# 8. Each campaign must belong to a section that exists in sections.csv
+#
+# DATE FORMAT GUIDELINES:
+# -----------------------
+# - Always use YYYY-MM-DD format
+# - Use leading zeros: 2023-06-05 (not 2023-6-5)
+# - Examples:
+# Correct: 2023-01-15, 2022-12-08, 2024-06-30
+# Wrong: 15/01/2023, 2023/1/15, Jan 15 2023
+#
+# DATA PROVIDER GUIDELINES:
+# -------------------------
+# - Include name and institution for clarity
+"# - Format: ""FirstName LastName - Institution"" or ""Institution - Department"""
+# - Examples:
+"#   ""Jane Doe - EDYTEM"""
+"#   ""USGS - Idaho Water Science Center"""
+"#   ""John Smith, Université de Grenoble"""
+#
+# REFERENCE GUIDELINES:
+# ---------------------
+# - Preferably use DOI (Digital Object Identifier)
+# - Format: doi:10.xxxx/yyyy or full URL https://doi.org/10.xxxx/yyyy
+# - If no DOI, provide full citation
+# - Leave empty if unpublished data
+#
+# FINAL FILE STRUCTURE:
+# ---------------------
+# campaign_id,section_id,campaign_date,data_provider,contact_email,reference,notes
+# CAMP_001,FRA_ARC_S01,2023-06-15,J. Doe - EDYTEM,j.doe@univ.fr,doi:10.1234/example,Snowmelt event
+# YOUR_CAMP_1,YOUR_SECTION_1,2024-01-15,Your Name - Lab,email@inst.edu,,Notes here
+# ==============================================================================

@@ -1,0 +1,216 @@
+measurement_id,campaign_id,measurement_method,bedload_rate_total_kg_s,discharge_m3_s,discharge_source,discharge_station_code,discharge_station_name,d50_mm,d84_mm,d10_mm,water_depth_mean_m,flow_velocity_mean_m_s,acoustic_hydrophone_type,acoustic_recorder_type,acoustic_sensitivity_db,acoustic_calibration,acoustic_calibration_a,acoustic_calibration_b,adcp_type,adcp_equation_type,adcp_measurement_duration_s,sampler_type,dune_survey_method,dune_echosounder_type,dune_equation_type,dune_interval_hours
+MEAS_001,CAMP_001,passive_acoustic,0.156,12.5,adcp_measurement,,,35.2,78.5,8.3,0.85,1.2,HTI-96-MIN,SM3BAT,-165,Nasr_2023,,,,,,,,,,
+MEAS_002,CAMP_001,passive_acoustic,0.142,12.5,adcp_measurement,,,35.2,78.5,8.3,0.85,1.2,HTI-96-MIN,SM3BAT,-165,Le_Guern_2024,,,,,,,,,,
+MEAS_003,CAMP_002,passive_acoustic,0.089,8.3,rating_curve,,,35.2,78.5,8.3,0.65,0.95,HTI-96-MIN,SM3BAT,-165,other,0.0015,1.75,,,,,,,
+MEAS_004,CAMP_003,active_acoustic,0.245,18.7,hydrometric_station,V3324010,Arc à Bourg-Saint-Maurice,28.5,62.3,6.2,1.05,1.45,,,,,,,RiverRay,Rio_Matic_2020,300,,,,
+MEAS_005,CAMP_004,active_acoustic,1.234,95.3,hydrometric_station,USGS-13313000,Snake River at Hells Canyon,45.8,98.2,12.5,2.15,2.35,,,,,,,StreamPro,Rennie_2017,600,,,,
+MEAS_006,CAMP_001,physical_sampler,0.178,12.5,adcp_measurement,,,35.2,78.5,8.3,0.85,1.2,,,,,,,,,,Helley-Smith 76mm,,,
+MEAS_007,CAMP_003,physical_sampler,0.267,18.7,hydrometric_station,V3324010,Arc à Bourg-Saint-Maurice,28.5,62.3,6.2,1.05,1.45,,,,,,,,,,Helley-Smith 152mm,,,
+MEAS_008,CAMP_005,physical_sampler,2.145,78.5,hydrometric_station,I0010001,Adige a Trento,52.3,105.6,15.2,1.85,1.95,,,,,,,,,,Toutle River 305mm,,,
+MEAS_009,CAMP_004,dune_tracking,1.156,95.3,hydrometric_station,USGS-13313000,Snake River at Hells Canyon,45.8,98.2,12.5,2.15,2.35,,,,,,,,,,,bathymetry,multibeam,van_den_Berg_1987,24
+MEAS_010,CAMP_006,dune_tracking,0.523,25.6,current_meter,,,38.7,82.4,9.8,1.25,1.55,,,,,,,,,,,photogrammetry,single_beam,Simons_1965,48
+MEAS_011,CAMP_007,passive_acoustic,0.067,5.8,rating_curve,,,22.3,48.5,5.1,0.55,0.75,HTI-96-MIN,SM4BAT,-168,Nasr_2023,,,,,,,,,,
+MEAS_012,CAMP_008,passive_acoustic,0.198,15.2,adcp_measurement,,,35.2,78.5,8.3,0.95,1.35,HTI-96-MIN,SM3BAT,-165,Le_Guern_2024,,,,,,,,,,
+MEAS_013,CAMP_009,active_acoustic,2.567,125.6,hydrometric_station,USGS-13313000,Snake River at Hells Canyon,48.5,102.3,13.8,2.45,2.65,,,,,,,RiverRay,Wright_McEwan_2008,450,,,,
+MEAS_014,CAMP_009,dune_tracking,2.412,125.6,hydrometric_station,USGS-13313000,Snake River at Hells Canyon,48.5,102.3,13.8,2.45,2.65,,,,,,,,,,,bathymetry,multibeam,Yalin_1977,12
+MEAS_015,CAMP_010,physical_sampler,0.312,18.3,model,,,42.1,89.6,11.2,1.15,1.25,,,,,,,,,,Helley-Smith 76mm,,,
+
+# ==============================================================================
+# MEASUREMENTS TEMPLATE - INSTRUCTIONS
+# ==============================================================================
+# 
+#  IMPORTANT: DELETE ALL LINES STARTING WITH '#' BEFORE USING THIS FILE
+#               Keep only the header line and data rows
+#
+# REQUIRED COLUMNS (cannot be empty):
+# ------------------------------------
+# - measurement_id: Unique measurement identifier
+#                   Examples: MEAS_001, MEAS_002, MEAS_ARC_001
+#
+# - campaign_id: Campaign identifier (must exist in campaigns.csv)
+#                Examples: CAMP_001, CAMP_002, CAMP_ARC_2023_06
+#
+# - measurement_method: Method used for bedload measurement
+#                       Allowed values (choose ONE):
+#                       * passive_acoustic
+#                       * active_acoustic
+#                       * physical_sampler
+#                       * dune_tracking
+#
+# - bedload_rate_total_kg_s: Total bedload transport rate in kg/s
+#                            Examples: 0.156, 1.234, 2.567
+#                            This is THE KEY DATA POINT
+#
+# OPTIONAL COLUMNS - GENERAL (recommended but can be left empty):
+# -----------------------------------------------------------------
+# - discharge_m3_s: Water discharge in m�/s
+#                   Examples: 12.5, 95.3, 125.6
+#                   HIGHLY RECOMMENDED for flux vs discharge analysis
+#
+# - discharge_source: Source/method of discharge measurement
+#                     Allowed values:
+#                     * hydrometric_station (from gauging station database)
+#                     * adcp_measurement (measured with ADCP during campaign)
+#                     * rating_curve (calculated from water level + local rating curve)
+#                     * current_meter (measured with current meter)
+#                     * model (from hydrological model)
+#                     * estimated (visual estimate/approximation)
+#                     * other (specify in notes)
+#
+# - discharge_station_code: Station code (only if discharge_source = hydrometric_station)
+#                           Examples: V3324010 (France), USGS-13313000 (USA), 
+#                                    I0010001 (Italy), 2018 (Switzerland)
+#                           Leave empty if not from hydrometric station
+#
+# - discharge_station_name: Station name (only if discharge_source = hydrometric_station)
+"#                           Examples: ""Arc à Bourg-Saint-Maurice"", "
+"#                                    ""Snake River at Hells Canyon"""
+#                           Leave empty if not from hydrometric station
+#
+# - d50_mm: Median grain size in mm
+#           Examples: 35.2, 45.8, 22.3
+#           HIGHLY RECOMMENDED for grain size analysis
+#
+# - d84_mm: 84th percentile grain size in mm
+#           Examples: 78.5, 98.2, 62.3
+#           RECOMMENDED
+#
+# - d10_mm: 10th percentile grain size in mm
+#           Examples: 8.3, 12.5, 5.1
+#           RECOMMENDED
+#
+# - water_depth_mean_m: Mean water depth in meters
+#                       Examples: 0.85, 1.25, 2.15
+#
+# - flow_velocity_mean_m_s: Mean flow velocity in m/s
+#                           Examples: 1.2, 1.95, 2.35
+#
+# ==============================================================================
+# DISCHARGE SOURCE EXAMPLES:
+# ==============================================================================
+#
+# Example 1 - Hydrometric station (large river):
+# discharge_m3_s,discharge_source,discharge_station_code,discharge_station_name
+# 125.6,hydrometric_station,USGS-13313000,Snake River at Hells Canyon
+#
+# Example 2 - ADCP measurement (small mountain stream):
+# discharge_m3_s,discharge_source,discharge_station_code,discharge_station_name
+# 12.5,adcp_measurement,,
+#
+# Example 3 - Rating curve (local measurement):
+# discharge_m3_s,discharge_source,discharge_station_code,discharge_station_name
+# 8.3,rating_curve,,
+#
+# Example 4 - Current meter:
+# discharge_m3_s,discharge_source,discharge_station_code,discharge_station_name
+# 25.6,current_meter,,
+#
+# IMPORTANT: Fill discharge_station_code and discharge_station_name ONLY when
+#            discharge_source = hydrometric_station
+#
+# ==============================================================================
+# METHOD-SPECIFIC COLUMNS (only fill for relevant method)
+# ==============================================================================
+#
+# FOR PASSIVE_ACOUSTIC MEASUREMENTS:
+# -----------------------------------
+# Fill these columns ONLY if measurement_method = passive_acoustic
+#
+# - acoustic_hydrophone_type: Type/model of hydrophone
+#                             Examples: HTI-96-MIN, Aquarian H2a, Brüel & Kjær 8103
+#
+# - acoustic_recorder_type: Type/model of acoustic recorder
+#                           Examples: SM3BAT, SM4BAT, SongMeter, custom recorder
+#
+# - acoustic_sensitivity_db: Hydrophone sensitivity in dB re 1µPa²
+#                            Examples: -165, -168, -170
+#                            Typical range: -180 to -150 dB
+#
+# - acoustic_calibration: Calibration equation used
+#                         Allowed values:
+#                         * Nasr_2023 (Nasr et al. 2023 equation)
+#                         * Le_Guern_2024 (Le Guern et al. 2024 equation)
+#                         * other (custom/site-specific equation)
+#
+# - acoustic_calibration_a: Parameter 'a' in Qb = a * Pa^b
+#                           Only fill if acoustic_calibration = other
+#                           Examples: 0.0015, 0.0012, 0.0018
+#
+# - acoustic_calibration_b: Parameter 'b' in Qb = a * Pa^b
+#                           Only fill if acoustic_calibration = other
+#                           Examples: 1.75, 1.85, 1.65
+#
+# FOR ACTIVE_ACOUSTIC MEASUREMENTS (ADCP):
+# -----------------------------------------
+# Fill these columns ONLY if measurement_method = active_acoustic
+#
+# - adcp_type: Type/model of ADCP
+#              Examples: RiverRay, StreamPro, Rio Grande, Sentinel V
+#
+# - adcp_equation_type: Equation/method used for bedload estimation
+#                       Examples: Rennie_2017, Wright_McEwan_2008, Rio_Matic_2020,
+#                                Latosinski_2017, custom
+#                       (Too many to list - specify the reference used)
+#
+# - adcp_measurement_duration_s: Static measurement duration in seconds
+#                                Examples: 300, 600, 450
+#                                Typical range: 180-900 seconds
+#
+# FOR PHYSICAL_SAMPLER MEASUREMENTS:
+# -----------------------------------
+# Fill these columns ONLY if measurement_method = physical_sampler
+#
+# - sampler_type: Type and width of physical sampler
+#                 Examples: Helley-Smith 76mm, Helley-Smith 152mm,
+#                          Toutle River 305mm, Delft bottle, BL-84
+#
+# FOR DUNE_TRACKING MEASUREMENTS:
+# --------------------------------
+# Fill these columns ONLY if measurement_method = dune_tracking
+#
+# - dune_survey_method: Survey method used
+#                       Examples: bathymetry, photogrammetry, lidar, sonar
+#
+# - dune_echosounder_type: Type of echosounder (if applicable)
+#                          Allowed values:
+#                          * single_beam
+#                          * multibeam
+#                          Leave empty if not using echosounder
+#
+# - dune_equation_type: Bedform transport equation used
+#                       Examples: van_den_Berg_1987, Simons_1965, Yalin_1977,
+#                                Ashley_1990, other
+#
+# - dune_interval_hours: Average time interval between surveys in hours
+#                        Examples: 12, 24, 48, 72
+#
+# ==============================================================================
+# HOW TO USE:
+# -----------
+# 1. Choose which measurement method you used
+# 2. Fill ALL required columns 
+# 3. Fill general optional columns if available (discharge, grain size, etc.)
+# 4. For discharge, specify the source and station info if applicable
+# 5. Fill ONLY the method-specific columns for your method
+# 6. Leave other method columns EMPTY
+# 7. Add a new row for each measurement
+# 8. DELETE ALL INSTRUCTION LINES (lines starting with #) before using
+#
+# EXAMPLES BY DISCHARGE SOURCE:
+# ------------------------------
+#
+# Large river with gauging station:
+# MEAS_001,CAMP_001,passive_acoustic,0.156,125.6,hydrometric_station,USGS-13313000,Snake River at Hells Canyon,45.8,...
+#
+# Small mountain stream with ADCP:
+# MEAS_002,CAMP_002,passive_acoustic,0.089,8.3,adcp_measurement,,,35.2,...
+#
+# Rating curve from local staff gauge:
+# MEAS_003,CAMP_003,physical_sampler,0.178,12.5,rating_curve,,,35.2,...
+#
+# FINAL FILE STRUCTURE:
+# ---------------------
+# measurement_id,campaign_id,measurement_method,bedload_rate_total_kg_s,discharge_m3_s,discharge_source,...
+# MEAS_001,CAMP_001,passive_acoustic,0.156,12.5,adcp_measurement,,,35.2,78.5,...
+# YOUR_MEAS_1,YOUR_CAMP_1,your_method,value,discharge,source,code,name,...[method-specific columns]
+# ==============================================================================

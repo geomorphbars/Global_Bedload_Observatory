@@ -1,0 +1,50 @@
+river_id,river_name,country,watershed_area_km2,notes
+FRA_ARC,Arc,FRA,2000,Alpine river with snowmelt regime
+CHE_VENOGE,Venoge,CHE,235,Small catchment in western Switzerland
+USA_SNAKE,Snake River,USA,280000,Major tributary of Columbia River
+ITA_ADIGE,Adige,ITA,12100,Second longest river in Italy
+
+# ==============================================================================
+# RIVERS TEMPLATE - INSTRUCTIONS
+# ==============================================================================
+# 
+#   IMPORTANT: DELETE ALL LINES STARTING WITH '#' BEFORE USING THIS FILE
+#               Keep only the header line (river_id,river_name,...) and data rows
+#
+# REQUIRED COLUMNS (cannot be empty):
+# ------------------------------------
+# - river_id: Unique river identifier (format: COUNTRYCODE_RIVERNAME)
+#             Examples: FRA_ARC, USA_COLORADO, CHE_RHONE, ITA_PO
+#
+# - river_name: Name of the river
+#               Examples: Arc, Colorado River, Rhone, Po
+#
+# - country: ISO 3166-1 alpha-3 country code (3 letters)
+#            Examples: FRA (France), USA (United States), CHE (Switzerland), 
+#                     ITA (Italy), ESP (Spain), DEU (Germany)
+#
+# OPTIONAL COLUMNS (can be left empty):
+# ----------------------------------------
+# - watershed_area_km2: Watershed area in km²
+#                       Examples: 2000, 280000, 12100
+#
+# - notes: Additional information (hydrological regime, context, etc.)
+"#          Examples: ""Alpine river with snowmelt regime"", "
+"#                   ""Regulated flow downstream of dam"""
+#
+# HOW TO USE:
+# -----------
+# 1. Copy the 4 example rows above (FRA_ARC, CHE_VENOGE, USA_SNAKE, ITA_ADIGE)
+# 2. Replace with your own data
+# 3. To add a river, add a new line following the same format
+# 4. Keep the column order as shown
+# 5. If an optional value is missing, leave it empty: FRA_ARC,Arc,FRA,,
+# 6. DELETE ALL INSTRUCTION LINES (lines starting with #) before using
+#
+# FINAL FILE STRUCTURE:
+# ---------------------
+# river_id,river_name,country,watershed_area_km2,notes
+# FRA_ARC,Arc,FRA,2000,Alpine river with snowmelt regime
+# YOUR_RIVER_1,Name1,COUNTRY1,1000,Notes here
+# YOUR_RIVER_2,Name2,COUNTRY2,5000,Other notes
+# ==============================================================================
