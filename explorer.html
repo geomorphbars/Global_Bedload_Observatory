@@ -438,21 +438,32 @@
 		<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
 			<h2>🔍 Filter & Search</h2>
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-				<select id="filter-river-browse" onchange="applyFiltersBrowse()">
-					<option value="">All Rivers</option>
-				</select>
-				<select id="filter-section-browse" onchange="applyFiltersBrowse()">
-					<option value="">All Sections</option>
-				</select>
-				<select id="filter-country-browse" onchange="applyFiltersBrowse()">
-					<option value="">All Countries</option>
-				</select>
-				<select id="filter-method-browse" onchange="applyFiltersBrowse()">
-					<option value="">All Methods</option>
-				</select>
-				<input type="date" id="filter-date-start-browse" onchange="applyFiltersBrowse()" placeholder="Start date">
-				<input type="date" id="filter-date-end-browse" onchange="applyFiltersBrowse()" placeholder="End date">
+			<select id="filter-river-browse" onchange="applyFiltersBrowse()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+				<option value="">All Rivers</option>
+			</select>
+			<select id="filter-section-browse" onchange="applyFiltersBrowse()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+				<option value="">All Sections</option>
+			</select>
+			<select id="filter-country-browse" onchange="applyFiltersBrowse()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+				<option value="">All Countries</option>
+			</select>
+			<select id="filter-method-browse" onchange="applyFiltersBrowse()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+				<option value="">All Methods</option>
+			</select>
+		</div>
+		<div style="margin-top: 15px;">
+			<label style="display: block; font-size: 0.9em; font-weight: 600; margin-bottom: 5px;">Date Range:</label>
+			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+				<div>
+					<label style="display: block; font-size: 0.85em; color: #666; margin-bottom: 5px;">From:</label>
+					<input type="date" id="filter-date-start-browse" onchange="applyFiltersBrowse()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+				</div>
+				<div>
+					<label style="display: block; font-size: 0.85em; color: #666; margin-bottom: 5px;">To:</label>
+					<input type="date" id="filter-date-end-browse" onchange="applyFiltersBrowse()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+				</div>
 			</div>
+		</div>
 			<div style="margin-top: 15px;">
 				<button class="btn btn-success" onclick="exportAllData('csv')">📥 Export All (CSV)</button>
 				<button class="btn btn-success" onclick="exportAllData('json')">📥 Export All (JSON)</button>
@@ -647,11 +658,11 @@
             const campaigns = allData.campaigns.filter(c => c.section_id === section.section_id);
             
             // Build HTML
-            let html = `
-                <h2 class="section-title">${river ? river.river_name : 'Unknown River'}</h2>
-                <h3 style="color: #666; margin-bottom: 20px;">${section.section_name}</h3>
-                
-                <div class="info-grid">
+			let html = `
+				<h2 class="section-title">${river ? river.river_name : 'Unknown River'}</h2>
+				<h3 style="color: #666; margin-bottom: 20px;">${section.section_name}</h3>
+				
+				<div class="info-grid">
                     <div class="info-item">
                         <div class="info-label">Country</div>
                         <div class="info-value">${river ? river.country : 'N/A'}</div>
@@ -677,12 +688,43 @@
                         <div class="info-value">${measurements.length}</div>
                     </div>
                 </div>
-                
-                <div class="export-buttons">
-                    <button class="btn btn-success" onclick="exportSectionData('csv')">📥 Download CSV</button>
-                    <button class="btn btn-success" onclick="exportSectionData('json')">📥 Download JSON</button>
-                </div>
-            `;
+    
+				<!-- Filtres -->
+				<div class="filters-section" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+					<h3 style="margin-top: 0; font-size: 1.1em; margin-bottom: 15px;">🔍 Filter Measurements</h3>
+					
+					<label style="display: block; margin-top: 10px; font-weight: 600; font-size: 0.9em;">Method:</label>
+					<select id="filter-method-sidebar" onchange="applyFiltersSidebar()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Methods</option>
+						<option value="passive_acoustic">Passive Acoustic</option>
+						<option value="active_acoustic">Active Acoustic</option>
+						<option value="physical_sampler">Physical Sampler</option>
+						<option value="dune_tracking">Dune Tracking</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Date Range:</label>
+					<div style="margin-top: 5px;">
+						<label style="display: block; font-size: 0.85em; color: #666; margin-bottom: 3px;">From:</label>
+						<input type="date" id="filter-date-start-sidebar" onchange="applyFiltersSidebar()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 8px;">
+						
+						<label style="display: block; font-size: 0.85em; color: #666; margin-bottom: 3px;">To:</label>
+						<input type="date" id="filter-date-end-sidebar" onchange="applyFiltersSidebar()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+					</div>
+					
+					<button onclick="resetFiltersSidebar()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+						🔄 Reset Filters
+					</button>
+					
+					<div style="margin-top: 10px; text-align: center; color: #666;">
+						<small id="filter-count-sidebar">Showing all ${measurements.length} measurements</small>
+					</div>
+				</div>
+				
+				<div class="export-buttons">
+					<button class="btn btn-success" onclick="exportSectionData('csv')">📥 Download CSV</button>
+					<button class="btn btn-success" onclick="exportSectionData('json')">📥 Download JSON</button>
+				</div>
+			`;
             
             if (measurements.length > 0) {
                 html += `
@@ -710,6 +752,54 @@
                 createTemporalChart(measurements, campaigns);
             }
         }
+		
+		// Stocker les mesures filtrées pour la sidebar
+		let currentSidebarMeasurements = [];
+
+		function applyFiltersSidebar() {
+			if (!currentSection) return;
+			
+			const method = document.getElementById('filter-method-sidebar').value;
+			const dateStart = document.getElementById('filter-date-start-sidebar').value;
+			const dateEnd = document.getElementById('filter-date-end-sidebar').value;
+			
+			// Get all measurements for current section
+			const allMeasurements = getMeasurementsForSection(currentSection.section_id);
+			const campaigns = allData.campaigns.filter(c => c.section_id === currentSection.section_id);
+			
+			// Apply filters
+			currentSidebarMeasurements = allMeasurements.filter(m => {
+				const campaign = campaigns.find(c => c.campaign_id === m.campaign_id);
+				
+				if (method && m.measurement_method !== method) return false;
+				if (dateStart && campaign?.campaign_date < dateStart) return false;
+				if (dateEnd && campaign?.campaign_date > dateEnd) return false;
+				
+				return true;
+			});
+			
+			// Update table
+			const tableContainer = document.querySelector('.measurements-table').parentElement;
+			tableContainer.innerHTML = generateMeasurementsTable(currentSidebarMeasurements, campaigns);
+			
+			// Update charts
+			createFluxDischargeChart(currentSidebarMeasurements);
+			createTemporalChart(currentSidebarMeasurements, campaigns);
+			
+			// Update counter
+			document.getElementById('filter-count-sidebar').textContent = 
+				`Showing ${currentSidebarMeasurements.length} of ${allMeasurements.length} measurements`;
+		}
+
+		function resetFiltersSidebar() {
+			document.getElementById('filter-method-sidebar').value = '';
+			document.getElementById('filter-date-start-sidebar').value = '';
+			document.getElementById('filter-date-end-sidebar').value = '';
+			
+			if (currentSection) {
+				showSectionDetails(currentSection);
+			}
+		}
         
         function generateMeasurementsTable(measurements, campaigns) {
             let html = '<table class="measurements-table"><thead><tr>';
