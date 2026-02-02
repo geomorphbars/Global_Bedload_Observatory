@@ -850,53 +850,6 @@
             }
         }
 		
-		// Stocker les mesures filtrées pour la sidebar
-		let currentSidebarMeasurements = [];
-
-		function applyFiltersSidebar() {
-			if (!currentSection) return;
-			
-			const method = document.getElementById('filter-method-sidebar').value;
-			const dateStart = document.getElementById('filter-date-start-sidebar').value;
-			const dateEnd = document.getElementById('filter-date-end-sidebar').value;
-			
-			// Get all measurements for current section
-			const allMeasurements = getMeasurementsForSection(currentSection.section_id);
-			const campaigns = allData.campaigns.filter(c => c.section_id === currentSection.section_id);
-			
-			// Apply filters
-			currentSidebarMeasurements = allMeasurements.filter(m => {
-				const campaign = campaigns.find(c => c.campaign_id === m.campaign_id);
-				
-				if (method && m.measurement_method !== method) return false;
-				if (dateStart && campaign?.campaign_date < dateStart) return false;
-				if (dateEnd && campaign?.campaign_date > dateEnd) return false;
-				
-				return true;
-			});
-			
-			// Update table
-			const tableContainer = document.querySelector('.measurements-table').parentElement;
-			tableContainer.innerHTML = generateMeasurementsTable(currentSidebarMeasurements, campaigns);
-			
-			// Update charts
-			createFluxDischargeChart(currentSidebarMeasurements);
-			createTemporalChart(currentSidebarMeasurements, campaigns);
-			
-			// Update counter
-			document.getElementById('filter-count-sidebar').textContent = 
-				`Showing ${currentSidebarMeasurements.length} of ${allMeasurements.length} measurements`;
-		}
-
-		function resetFiltersSidebar() {
-			document.getElementById('filter-method-sidebar').value = '';
-			document.getElementById('filter-date-start-sidebar').value = '';
-			document.getElementById('filter-date-end-sidebar').value = '';
-			
-			if (currentSection) {
-				showSectionDetails(currentSection);
-			}
-		}
         
         function generateMeasurementsTable(measurements, campaigns) {
             let html = '<table class="measurements-table"><thead><tr>';
