@@ -24,19 +24,18 @@
         }
         
         #header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			padding: 15px 30px 10px 30px;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+		}
         
 		#tabs {
 			display: flex;
 			gap: 10px;
-			margin-top: 10px;
+			margin-top: 15px;
+			padding-top: 15px;
+			border-top: 1px solid rgba(255,255,255,0.2);
 		}
 
 		.tab {
@@ -61,7 +60,7 @@
 
 		#tab-map, #tab-browse, #tab-charts {
 			display: none;
-			height: calc(100vh - 120px);
+			height: calc(100vh - 110px);
 		}
 
 		#tab-map.active {
@@ -93,9 +92,9 @@
         }
         
         #main-container {
-            display: flex;
-            height: calc(100vh - 60px);
-        }
+			display: flex;
+			height: calc(100vh - 110px);
+		}
         
         #map {
             flex: 1;
@@ -320,11 +319,13 @@
     </div>
     
     <div id="header">
-		<h1>🌊 World Rivers Bedload Transport Database</h1>
-		<div id="stats">
-			<div class="stat-item">📊 <span id="total-measurements">0</span> measurements</div>
-			<div class="stat-item">🏞️ <span id="total-rivers">0</span> rivers</div>
-			<div class="stat-item">🌍 <span id="total-countries">0</span> countries</div>
+		<div style="display: flex; justify-content: space-between; align-items: center;">
+			<h1>🌊 World Rivers Bedload Transport Database</h1>
+			<div id="stats">
+				<div class="stat-item">📊 <span id="total-measurements">0</span> measurements</div>
+				<div class="stat-item">🏞️ <span id="total-rivers">0</span> rivers</div>
+				<div class="stat-item">🌍 <span id="total-countries">0</span> countries</div>
+			</div>
 		</div>
 		<div id="tabs">
 			<button class="tab active" onclick="showTab('map')">🗺️ Map</button>
