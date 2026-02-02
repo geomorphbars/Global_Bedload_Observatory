@@ -343,6 +343,11 @@
 				<div class="filters-section" style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
 					<h3 style="margin-top: 0; font-size: 1.1em; margin-bottom: 15px;">🔍 Filter Sites</h3>
 					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Country:</label>
+					<select id="filter-country-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Countries</option>
+					</select>
+					
 					<label style="display: block; margin-top: 10px; font-weight: 600; font-size: 0.9em;">River:</label>
 					<select id="filter-river-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
 						<option value="">All Rivers</option>
@@ -360,11 +365,6 @@
 						<option value="active_acoustic">Active Acoustic</option>
 						<option value="physical_sampler">Physical Sampler</option>
 						<option value="dune_tracking">Dune Tracking</option>
-					</select>
-					
-					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Country:</label>
-					<select id="filter-country-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
-						<option value="">All Countries</option>
 					</select>
 					
 					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Date Range:</label>
@@ -605,51 +605,96 @@
 		
 		
 		
-		// Populate map filters
+		// Populate map filters (cascade version)
 		function populateMapFilters() {
-			// Populate rivers
-			const rivers = [...new Set(allData.sections.map(s => s.river_id))];
-			const riverSelect = document.getElementById('filter-river-map');
-			riverSelect.innerHTML = '<option value="">All Rivers</option>';
-			rivers.forEach(riverId => {
-				const river = allData.rivers.find(r => r.river_id === riverId);
-				if (river) {
-					const option = document.createElement('option');
-					option.value = riverId;
-					option.textContent = river.river_name;
-					riverSelect.appendChild(option);
-				}
-			});
-			
-			// Populate sections
-			const sections = allData.sections;
-			const sectionSelect = document.getElementById('filter-section-map');
-			sectionSelect.innerHTML = '<option value="">All Sections</option>';
-			sections.forEach(section => {
-				const option = document.createElement('option');
-				option.value = section.section_id;
-				option.textContent = section.section_name;
-				sectionSelect.appendChild(option);
-			});
-			
-			// Populate countries
-			const countries = [...new Set(allData.rivers.map(r => r.country))].filter(c => c).sort();
-			const countrySelect = document.getElementById('filter-country-map');
-			countrySelect.innerHTML = '<option value="">All Countries</option>';
-			countries.forEach(country => {
-				const option = document.createElement('option');
-				option.value = country;
-				option.textContent = country;
-				countrySelect.appendChild(option);
-			});
-		}
-
-		// Apply filters to map markers
-		function applyMapFilters() {
+			const country = document.getElementById('filter-country-map').value;
 			const river = document.getElementById('filter-river-map').value;
 			const section = document.getElementById('filter-section-map').value;
 			const method = document.getElementById('filter-method-map').value;
+			
+			// 1. POPULATE COUNTRIES (toujours tous)
+			const countries = [...new Set(allData.rivers.map(r => r.country))].filter(c => c).sort();
+			const countrySelect = document.getElementById('filter-country-map');
+			const currentCountry = countrySelect.value;
+			countrySelect.innerHTML = '<option value="">All Countries</option>';
+			countries.forEach(c => {
+				const option = document.createElement('option');
+				option.value = c;
+				option.textContent = c;
+				if (c === currentCountry) option.selected = true;
+				countrySelect.appendChild(option);
+			});
+			
+			// 2. POPULATE RIVERS (filtrés par country si sélectionné)
+			let availableRivers = allData.rivers;
+			if (country) {
+				availableRivers = availableRivers.filter(r => r.country === country);
+			}
+			const riverSelect = document.getElementById('filter-river-map');
+			const currentRiver = riverSelect.value;
+			riverSelect.innerHTML = '<option value="">All Rivers</option>';
+			availableRivers.forEach(r => {
+				const option = document.createElement('option');
+				option.value = r.river_id;
+				option.textContent = r.river_name;
+				if (r.river_id === currentRiver) option.selected = true;
+				riverSelect.appendChild(option);
+			});
+			
+			// 3. POPULATE SECTIONS (filtrés par country et/ou river)
+			let availableSections = allData.sections;
+			if (country) {
+				const riverIdsInCountry = availableRivers.map(r => r.river_id);
+				availableSections = availableSections.filter(s => riverIdsInCountry.includes(s.river_id));
+			}
+			if (river) {
+				availableSections = availableSections.filter(s => s.river_id === river);
+			}
+			const sectionSelect = document.getElementById('filter-section-map');
+			const currentSection = sectionSelect.value;
+			sectionSelect.innerHTML = '<option value="">All Sections</option>';
+			availableSections.forEach(s => {
+				const option = document.createElement('option');
+				option.value = s.section_id;
+				option.textContent = s.section_name;
+				if (s.section_id === currentSection) option.selected = true;
+				sectionSelect.appendChild(option);
+			});
+			
+			// 4. POPULATE METHODS (filtrés par les sections disponibles)
+			const sectionIds = availableSections.map(s => s.section_id);
+			const campaignsInSections = allData.campaigns.filter(c => sectionIds.includes(c.section_id));
+			const campaignIds = campaignsInSections.map(c => c.campaign_id);
+			const measurementsInSections = allData.measurements.filter(m => campaignIds.includes(m.campaign_id));
+			const availableMethods = [...new Set(measurementsInSections.map(m => m.measurement_method))].filter(m => m).sort();
+			
+			const methodSelect = document.getElementById('filter-method-map');
+			const currentMethod = methodSelect.value;
+			methodSelect.innerHTML = '<option value="">All Methods</option>';
+			const methodLabels = {
+				'passive_acoustic': 'Passive Acoustic',
+				'active_acoustic': 'Active Acoustic',
+				'physical_sampler': 'Physical Sampler',
+				'dune_tracking': 'Dune Tracking'
+			};
+			availableMethods.forEach(m => {
+				const option = document.createElement('option');
+				option.value = m;
+				option.textContent = methodLabels[m] || m;
+				if (m === currentMethod) option.selected = true;
+				methodSelect.appendChild(option);
+			});
+		}
+
+		// Apply filters to map markers with auto-zoom
+		function applyMapFilters() {
+			// Update filters cascade
+			populateMapFilters();
+			
 			const country = document.getElementById('filter-country-map').value;
+			const river = document.getElementById('filter-river-map').value;
+			const section = document.getElementById('filter-section-map').value;
+			const method = document.getElementById('filter-method-map').value;
 			const dateStart = document.getElementById('filter-date-start-map').value;
 			const dateEnd = document.getElementById('filter-date-end-map').value;
 			
@@ -657,16 +702,16 @@
 			const filteredSections = allData.sections.filter(s => {
 				const river_data = allData.rivers.find(r => r.river_id === s.river_id);
 				
+				// Country filter
+				if (country && river_data?.country !== country) return false;
+				
 				// River filter
 				if (river && s.river_id !== river) return false;
 				
 				// Section filter
 				if (section && s.section_id !== section) return false;
 				
-				// Country filter
-				if (country && river_data?.country !== country) return false;
-				
-				// Method filter - check if section has measurements with this method
+				// Method filter
 				if (method) {
 					const sectionMeasurements = allData.measurements.filter(m => {
 						const campaign = allData.campaigns.find(c => c.campaign_id === m.campaign_id);
@@ -676,7 +721,7 @@
 					if (!hasMethod) return false;
 				}
 				
-				// Date filter - check if section has campaigns in date range
+				// Date filter
 				if (dateStart || dateEnd) {
 					const sectionCampaigns = allData.campaigns.filter(c => c.section_id === s.section_id);
 					const inRange = sectionCampaigns.some(c => {
@@ -694,14 +739,14 @@
 			markersCluster.clearLayers();
 			
 			// Add filtered markers
-			filteredSections.forEach(section => {
-				const river = allData.rivers.find(r => r.river_id === section.river_id);
-				const marker = L.marker([section.latitude, section.longitude]);
+			filteredSections.forEach(s => {
+				const river_data = allData.rivers.find(r => r.river_id === s.river_id);
+				const marker = L.marker([s.latitude, s.longitude]);
 				
 				marker.bindPopup(`
-					<strong>${river ? river.river_name : 'Unknown'}</strong><br>
-					${section.section_name}<br>
-					<button onclick='showSectionDetailsFromMap(${JSON.stringify(section).replace(/'/g, "&apos;")})' 
+					<strong>${river_data ? river_data.river_name : 'Unknown'}</strong><br>
+					${s.section_name}<br>
+					<button onclick='showSectionDetailsFromMap(${JSON.stringify(s).replace(/'/g, "&apos;")})' 
 							style='margin-top: 10px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;'>
 						View Details
 					</button>
@@ -709,6 +754,12 @@
 				
 				markersCluster.addLayer(marker);
 			});
+			
+			// AUTO-ZOOM on filtered markers
+			if (filteredSections.length > 0) {
+				const bounds = L.latLngBounds(filteredSections.map(s => [s.latitude, s.longitude]));
+				map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+			}
 			
 			// Update counter
 			const totalSections = allData.sections.length;
@@ -720,15 +771,21 @@
 
 		// Reset map filters
 		function resetMapFilters() {
+			document.getElementById('filter-country-map').value = '';
 			document.getElementById('filter-river-map').value = '';
 			document.getElementById('filter-section-map').value = '';
 			document.getElementById('filter-method-map').value = '';
-			document.getElementById('filter-country-map').value = '';
 			document.getElementById('filter-date-start-map').value = '';
 			document.getElementById('filter-date-end-map').value = '';
 			
+			// Repopulate all filters
+			populateMapFilters();
+			
 			// Reset map to show all markers
 			addMarkersToMap();
+			
+			// Reset zoom to initial view
+			map.setView([45, 6], 5);
 			
 			// Update counter
 			document.getElementById('filter-count-map').textContent = `Showing all ${allData.sections.length} sites`;
