@@ -339,19 +339,55 @@
 		<div id="sidebar">
 			<div id="close-btn" onclick="closeSidebar()">×</div>
 			<div id="sidebar-content">
-				<div class="welcome-message" style="padding: 40px 20px; text-align: center;">
-					<div style="font-size: 4em; margin-bottom: 20px;">📍</div>
-					<h2 style="color: #667eea; margin-bottom: 15px;">Select a Site</h2>
-					<p style="color: #666; line-height: 1.6;">
-						Click on any marker on the map to view detailed information, measurements, and charts for that section.
-					</p>
-					<div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-						<p style="color: #888; font-size: 0.9em; margin: 0;">
-							<strong>${allData.measurements.length}</strong> measurements available<br>
-							from <strong>${new Set(allData.sections.map(s => s.section_id)).size}</strong> sections<br>
-							across <strong>${new Set(allData.rivers.map(r => r.country)).size}</strong> countries
-						</p>
+				<!-- Filtres (toujours visibles en haut) -->
+				<div class="filters-section" style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+					<h3 style="margin-top: 0; font-size: 1.1em; margin-bottom: 15px;">🔍 Filter Sites</h3>
+					
+					<label style="display: block; margin-top: 10px; font-weight: 600; font-size: 0.9em;">River:</label>
+					<select id="filter-river-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Rivers</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Section:</label>
+					<select id="filter-section-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Sections</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Method:</label>
+					<select id="filter-method-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Methods</option>
+						<option value="passive_acoustic">Passive Acoustic</option>
+						<option value="active_acoustic">Active Acoustic</option>
+						<option value="physical_sampler">Physical Sampler</option>
+						<option value="dune_tracking">Dune Tracking</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Country:</label>
+					<select id="filter-country-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px;">
+						<option value="">All Countries</option>
+					</select>
+					
+					<label style="display: block; margin-top: 12px; font-weight: 600; font-size: 0.9em;">Date Range:</label>
+					<div style="margin-top: 5px;">
+						<label style="display: block; font-size: 0.85em; color: #666; margin-bottom: 3px;">From:</label>
+						<input type="date" id="filter-date-start-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 8px;">
+						
+						<label style="display: block; font-size: 0.85em; color: #666; margin-bottom: 3px;">To:</label>
+						<input type="date" id="filter-date-end-map" onchange="applyMapFilters()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
 					</div>
+					
+					<button onclick="resetMapFilters()" style="width: 100%; margin-top: 12px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+						🔄 Reset Filters
+					</button>
+					
+					<div style="margin-top: 10px; text-align: center; color: #666;">
+						<small id="filter-count-map">Showing all sites</small>
+					</div>
+				</div>
+				
+				<!-- Section détails (vide au départ, rempli au clic sur marqueur) -->
+				<div id="section-details" style="margin-top: 20px;">
+					<!-- Le contenu sera inséré ici par showSectionDetails() -->
 				</div>
 			</div>
 		</div>
@@ -511,6 +547,7 @@
                 
                 updateStats();
                 addMarkersToMap();
+				populateMapFilters();
                 
                 document.getElementById('loading').style.display = 'none';
             } catch (error) {
@@ -565,6 +602,142 @@
                 }
             });
         }
+		
+		
+		
+		// Populate map filters
+		function populateMapFilters() {
+			// Populate rivers
+			const rivers = [...new Set(allData.sections.map(s => s.river_id))];
+			const riverSelect = document.getElementById('filter-river-map');
+			riverSelect.innerHTML = '<option value="">All Rivers</option>';
+			rivers.forEach(riverId => {
+				const river = allData.rivers.find(r => r.river_id === riverId);
+				if (river) {
+					const option = document.createElement('option');
+					option.value = riverId;
+					option.textContent = river.river_name;
+					riverSelect.appendChild(option);
+				}
+			});
+			
+			// Populate sections
+			const sections = allData.sections;
+			const sectionSelect = document.getElementById('filter-section-map');
+			sectionSelect.innerHTML = '<option value="">All Sections</option>';
+			sections.forEach(section => {
+				const option = document.createElement('option');
+				option.value = section.section_id;
+				option.textContent = section.section_name;
+				sectionSelect.appendChild(option);
+			});
+			
+			// Populate countries
+			const countries = [...new Set(allData.rivers.map(r => r.country))].filter(c => c).sort();
+			const countrySelect = document.getElementById('filter-country-map');
+			countrySelect.innerHTML = '<option value="">All Countries</option>';
+			countries.forEach(country => {
+				const option = document.createElement('option');
+				option.value = country;
+				option.textContent = country;
+				countrySelect.appendChild(option);
+			});
+		}
+
+		// Apply filters to map markers
+		function applyMapFilters() {
+			const river = document.getElementById('filter-river-map').value;
+			const section = document.getElementById('filter-section-map').value;
+			const method = document.getElementById('filter-method-map').value;
+			const country = document.getElementById('filter-country-map').value;
+			const dateStart = document.getElementById('filter-date-start-map').value;
+			const dateEnd = document.getElementById('filter-date-end-map').value;
+			
+			// Filter sections based on criteria
+			const filteredSections = allData.sections.filter(s => {
+				const river_data = allData.rivers.find(r => r.river_id === s.river_id);
+				
+				// River filter
+				if (river && s.river_id !== river) return false;
+				
+				// Section filter
+				if (section && s.section_id !== section) return false;
+				
+				// Country filter
+				if (country && river_data?.country !== country) return false;
+				
+				// Method filter - check if section has measurements with this method
+				if (method) {
+					const sectionMeasurements = allData.measurements.filter(m => {
+						const campaign = allData.campaigns.find(c => c.campaign_id === m.campaign_id);
+						return campaign && campaign.section_id === s.section_id;
+					});
+					const hasMethod = sectionMeasurements.some(m => m.measurement_method === method);
+					if (!hasMethod) return false;
+				}
+				
+				// Date filter - check if section has campaigns in date range
+				if (dateStart || dateEnd) {
+					const sectionCampaigns = allData.campaigns.filter(c => c.section_id === s.section_id);
+					const inRange = sectionCampaigns.some(c => {
+						if (dateStart && c.campaign_date < dateStart) return false;
+						if (dateEnd && c.campaign_date > dateEnd) return false;
+						return true;
+					});
+					if (!inRange) return false;
+				}
+				
+				return true;
+			});
+			
+			// Clear markers
+			markersCluster.clearLayers();
+			
+			// Add filtered markers
+			filteredSections.forEach(section => {
+				const river = allData.rivers.find(r => r.river_id === section.river_id);
+				const marker = L.marker([section.latitude, section.longitude]);
+				
+				marker.bindPopup(`
+					<strong>${river ? river.river_name : 'Unknown'}</strong><br>
+					${section.section_name}<br>
+					<button onclick='showSectionDetailsFromMap(${JSON.stringify(section).replace(/'/g, "&apos;")})' 
+							style='margin-top: 10px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;'>
+						View Details
+					</button>
+				`);
+				
+				markersCluster.addLayer(marker);
+			});
+			
+			// Update counter
+			const totalSections = allData.sections.length;
+			document.getElementById('filter-count-map').textContent = 
+				filteredSections.length === totalSections 
+				? `Showing all ${totalSections} sites`
+				: `Showing ${filteredSections.length} of ${totalSections} sites`;
+		}
+
+		// Reset map filters
+		function resetMapFilters() {
+			document.getElementById('filter-river-map').value = '';
+			document.getElementById('filter-section-map').value = '';
+			document.getElementById('filter-method-map').value = '';
+			document.getElementById('filter-country-map').value = '';
+			document.getElementById('filter-date-start-map').value = '';
+			document.getElementById('filter-date-end-map').value = '';
+			
+			// Reset map to show all markers
+			addMarkersToMap();
+			
+			// Update counter
+			document.getElementById('filter-count-map').textContent = `Showing all ${allData.sections.length} sites`;
+		}
+
+		// Helper function for popup button
+		function showSectionDetailsFromMap(section) {
+			showSectionDetails(section);
+		}
         
         function getMeasurementsForSection(sectionId) {
             const campaigns = allData.campaigns.filter(c => c.section_id === sectionId);
@@ -668,7 +841,7 @@
                 html += '<p style="color: #999; text-align: center; margin: 30px 0;">No measurements available</p>';
             }
             
-            document.getElementById('sidebar-content').innerHTML = html;
+            document.getElementById('section-details').innerHTML = html;
             
             // Create charts
             if (measurements.length > 0) {
